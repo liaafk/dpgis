@@ -1,6 +1,8 @@
 import psycopg2
-import pydp as dp
+#import pydp as dp
 from configparser import ConfigParser
+
+from geo_dp_functions import testquery
 
 def config(filename='database.ini', section='postgresql'):
     # create a parser
@@ -37,6 +39,8 @@ def connect():
 	# execute a statement
         print('PostgreSQL database version:')
         cur.execute('SELECT version()')
+        
+        print(testquery(cur))
 
         # display the PostgreSQL database server version
         db_version = cur.fetchone()
