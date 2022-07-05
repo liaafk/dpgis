@@ -1,8 +1,8 @@
 import psycopg2
 #import pydp as dp
 from configparser import ConfigParser
-
-from geo_dp_functions import testquery
+from geo_dp_functions import getQueryPoints, testquery
+import sys
 
 def config(filename='database.ini', section='postgresql'):
     # create a parser
@@ -46,6 +46,14 @@ def connect():
         #db_version = cur.fetchone()
         #print(db_version)
        
+    # Get SQL Query
+        query = input("Please enter a SQL query: ")
+        print("TEST: ", query)
+        datapoint_attribute = input("Please enter name of datapoint attribute: ")
+        print(getQueryPoints(query, datapoint_attribute, conn))
+    # DP Mechanism
+
+
 	# close the communication with the PostgreSQL
         cur.close()
     except (Exception, psycopg2.DatabaseError) as error:
