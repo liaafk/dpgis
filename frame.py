@@ -1,7 +1,7 @@
 import psycopg2
 #import pydp as dp
 from configparser import ConfigParser
-from geo_dp_functions import getQueryPoints, testquery
+from geo_dp_functions import getNoisyDomain, getQueryPoints, testquery
 import sys
 
 def config(filename='database.ini', section='postgresql'):
@@ -52,8 +52,8 @@ def connect():
         datapoint_attribute = input("Please enter name of datapoint attribute: ")
     
     # Get raw points of query
-        print(getQueryPoints(query, datapoint_attribute, conn))
-
+        #print(getQueryPoints(query, datapoint_attribute, conn))
+        print(getNoisyDomain(getQueryPoints(query, datapoint_attribute, conn), 1.0))
     # DP Mechanism
 
 
