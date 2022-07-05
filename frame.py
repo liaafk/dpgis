@@ -46,11 +46,14 @@ def connect():
         #db_version = cur.fetchone()
         #print(db_version)
        
-    # Get SQL Query
+    # Get SQL Query and name of the attribute datapoint in table
         query = input("Please enter a SQL query: ")
         print("TEST: ", query)
         datapoint_attribute = input("Please enter name of datapoint attribute: ")
+    
+    # Get raw points of query
         print(getQueryPoints(query, datapoint_attribute, conn))
+
     # DP Mechanism
 
 
