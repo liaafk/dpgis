@@ -20,5 +20,5 @@ def getQueryPoints(query, datapoint_attribute, conn):
     part_from = getQueryParts(query)[1]
     print("Getting all points of query...")
     raw_points_query = "SELECT "+ datapoint_attribute + " FROM " + part_from
-    raw_points = gpd.GeoDataFrame.from_postgis(raw_points_query, conn, geom_col='loc' )
+    raw_points = gpd.GeoDataFrame.from_postgis(raw_points_query, conn, datapoint_attribute)
     return(raw_points)
