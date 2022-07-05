@@ -17,8 +17,15 @@ def getQueryParts(query):
     return(query_parts)
 
 def getQueryPoints(query, datapoint_attribute, conn):
-    part_from = getQueryParts(query)[1]
+    try:
+        part_from = getQueryParts(query)[1]
+    except:
+            print("ERROR: Query doesn't contain 'FROM'.")
+            return
     print("Getting all points of query...")
-    raw_points_query = "SELECT "+ datapoint_attribute + " FROM " + part_from
+    try:
+        raw_points_query = "SELECT "+ datapoint_attribute + " FROM " + part_from
+    except:
+        print("ERROR: SQL request wrong, probably wrong datapoint attribute name.")
     raw_points = gpd.GeoDataFrame.from_postgis(raw_points_query, conn, datapoint_attribute)
     return(raw_points)
