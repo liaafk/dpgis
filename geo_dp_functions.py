@@ -1,7 +1,6 @@
 import geopandas as gpd
 import diffprivlib
 from pandasql import sqldf
-from idna import valid_contextj
 
 def testquery(conn, sql):
     df = gpd.GeoDataFrame.from_postgis(sql, conn, geom_col='loc' )
@@ -35,6 +34,12 @@ def getQueryPoints(query, datapoint_attribute, conn):
 
 def getExtremePoints(raw_points):
     return raw_points.dissolve().total_bounds
+
+def removeExtremePoints(raw_points):
+    minx, miny, maxx, maxy = getExtremePoints(raw_points)
+    no_extreme_x = raw_points[raw_points['longitude'] not in [minx, maxx]]
+    no_extreme_xy = no_extreme_x[no_extreme_x['latitude'] not in [miny, maxy]]
+    return no_extreme_xy
 
 def getNoisyDomain(raw_points, eps):
     minx, miny, maxx, maxy = getExtremePoints(raw_points)
