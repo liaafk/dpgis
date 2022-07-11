@@ -1,7 +1,7 @@
 import psycopg2
 #import pydp as dp
 from configparser import ConfigParser
-from geo_dp_functions import dp_sql_response, getNoisyPoints, getQueryPoints, testquery
+from geo_dp_functions import noisy_sql_response, getNoisyPoints, getQueryPoints, testquery
 import sys
 
 def config(filename='database.ini', section='postgresql'):
@@ -59,7 +59,7 @@ def connect():
     
     # Get raw points of query
         #print(getQueryPoints(query, datapoint_attribute, conn))
-        print(dp_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_domain, noisy_result))
+        print(noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_domain, noisy_result))
 
     # DP Mechanism ...
         #print(getNoisyDomain(getQueryPoints(query, datapoint_attribute, conn), 2.0))

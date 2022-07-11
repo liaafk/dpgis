@@ -70,7 +70,7 @@ def addLaplaceToResponse(minx, miny, maxx, maxy, response, eps):
     
     return
 
-def dp_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_points, noisy_result):
+def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_points, noisy_result):
     #points relevant to query
     points = getQueryPoints(query, datapoint_attribute, conn)
     print("points wo noise: ", points)
