@@ -45,7 +45,10 @@ def connect():
         # display the PostgreSQL database server version
         #db_version = cur.fetchone()
         #print(db_version)
-       
+
+    #TODO
+    # Abfrage ob query entry performance test laufen lassen
+
     # Get SQL Query and name of the attribute datapoint in table
         query = input("Please enter a SQL query: ")
         datapoint_attribute = input("Please enter name of datapoint attribute: ")
