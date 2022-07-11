@@ -40,7 +40,7 @@ def connect():
         #print('PostgreSQL database version:')
         #cur.execute('SELECT version()')
         
-        print(testquery(conn,'SELECT * FROM orders LIMIT 10;'))
+        #print(testquery(conn,'SELECT * FROM orders LIMIT 10;'))
 
         # display the PostgreSQL database server version
         #db_version = cur.fetchone()
@@ -56,7 +56,7 @@ def connect():
         print(dp_sql_response(query, datapoint_attribute, conn, epsilon))
 
     # DP Mechanism ...
-
+        #print(getNoisyDomain(getQueryPoints(query, datapoint_attribute, conn), 2.0))
 
 	# close the communication with the PostgreSQL
         cur.close()

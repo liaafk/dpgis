@@ -1,5 +1,6 @@
 import geopandas as gpd
 import diffprivlib
+import pandas as pd
 from pandasql import sqldf
 
 def testquery(conn, sql):
@@ -30,33 +31,47 @@ def getQueryPoints(query, datapoint_attribute, conn):
     except:
         print("ERROR: SQL request wrong, probably wrong datapoint attribute name.")
     raw_points = gpd.GeoDataFrame.from_postgis(raw_points_query, conn, datapoint_attribute)
-    return(raw_points)
+    return raw_points
 
 def getExtremePoints(raw_points):
     return raw_points.dissolve().total_bounds
 
-def removeExtremePoints(raw_points):
+def removeExtremePoints(raw_points, datapoint_attribute):
     minx, miny, maxx, maxy = getExtremePoints(raw_points)
-    no_extreme_x = raw_points[raw_points['longitude'] not in [minx, maxx]]
-    no_extreme_xy = no_extreme_x[no_extreme_x['latitude'] not in [miny, maxy]]
-    return no_extreme_xy
+    raw_points_x = raw_points[datapoint_attribute].x
+    raw_points_y = raw_points[datapoint_attribute].y
+    d = {'longitude': raw_points_x, 'latitude': raw_points_y}
+    df= pd.DataFrame(d)
+    df_no_extreme_x = df[~df['longitude'].isin([minx, maxx])]
+    df_no_extreme_xy = df_no_extreme_x[~df_no_extreme_x['latitude'].isin([miny, maxy])]
+    gdf = gpd.GeoDataFrame(
+      df_no_extreme_xy, geometry=gpd.points_from_xy(df_no_extreme_xy.longitude, df_no_extreme_xy.latitude)) 
+    return gdf
 
-def getNoisyDomain(raw_points, eps):
-    minx, miny, maxx, maxy = getExtremePoints(raw_points)
+def getNoisyDomain(minx, miny, maxx, maxy, raw_points, eps):
     xsensitivity = maxx-minx
     ysensitivity = maxy-miny
-    raw_points_x = raw_points['loc'].x
-    raw_points_y = raw_points['loc'].y
+    raw_points_x = raw_points['geometry'].x
+    raw_points_y = raw_points['geometry'].y
     lap_x = diffprivlib.mechanisms.LaplaceBoundedDomain(epsilon=eps, sensitivity=xsensitivity, lower=minx, upper=maxx)
     lap_y = diffprivlib.mechanisms.LaplaceBoundedDomain(epsilon=eps, sensitivity=ysensitivity, lower=miny, upper=maxy)
     noisy_points_x = raw_points_x.apply(lambda val: lap_x.randomise(value=val))
     noisy_points_y = raw_points_y.apply(lambda val: lap_y.randomise(value=val))
-    return noisy_points_x, noisy_points_y
+    df = {"longitude": noisy_points_x, "latitude": noisy_points_y}
+    gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['longitude'], df['latitude']), crs="EPSG:4326")
+    return gdf
 
 def dp_sql_response(query, datapoint_attribute, conn, epsilon):
     query_points = getQueryPoints(query, datapoint_attribute, conn)
-    # löschen query_points = ....
-    noisy_geo_df = getNoisyDomain(query_points, epsilon)
-    response = sqldf(getQueryPoints(query, datapoint_attribute, conn)[0], noisy_geo_df)
+    points_wo_outliers = removeExtremePoints(query_points, datapoint_attribute)
+    minx, miny, maxx, maxy = getExtremePoints(query_points)
+    noisy_geo_df = getNoisyDomain(minx, miny, maxx, maxy, points_wo_outliers, float(epsilon))
+    #print(noisy_geo_df)
+    #geo_query = getQueryPoints(query, datapoint_attribute, conn)[0]
+    #print(geo_query)
+    #response = sqldf(getQueryPoints(query, datapoint_attribute, conn)[0], noisy_geo_df)
     # 'select' part vom request auf noisy_geo_df anwenden
-    return response
+    bounding_box = noisy_geo_df.dissolve().total_bounds
+    geom_center = noisy_geo_df.dissolve().centroid
+    union = noisy_geo_df.dissolve().union
+    return bounding_box, geom_center, union
