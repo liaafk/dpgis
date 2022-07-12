@@ -127,3 +127,4 @@ if __name__ == "__main__":
     domains, noisy_counts, counts, tree_depth = priv_tree(data['longitude'].values, data['latitude'].values, lam=2, theta=100, delta=10, domain_margin=1e-2, seed=7)
     end = time.time()
     print(f"elapsed time: {end-start}")
+    print(len(noisy_counts), len(domains))

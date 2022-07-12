@@ -2,6 +2,7 @@ import geopandas as gpd
 import diffprivlib
 import pandas as pd
 from pandasql import sqldf
+from shapely import geometry
 
 def testquery(conn, sql):
     df = gpd.GeoDataFrame.from_postgis(sql, conn, geom_col='loc' )
@@ -41,12 +42,14 @@ def removeExtremePoints(raw_points, datapoint_attribute):
     raw_points_y = raw_points[datapoint_attribute].y
     d = {'longitude': raw_points_x, 'latitude': raw_points_y}
     df= pd.DataFrame(d)
-    #df_no_extreme_x = df.drop(df[df['longitude'].isin([minx, maxx])])
-    #df_no_extreme_xy = df.drop(df[df['latitude'].isin([miny, maxy])])
     df_no_extreme_x = df[~df['longitude'].isin([minx, maxx])]
     df_no_extreme_xy = df_no_extreme_x[~df_no_extreme_x['latitude'].isin([miny, maxy])]
-    gdf = gpd.GeoDataFrame(
-        df_no_extreme_xy, geometry=gpd.points_from_xy(df_no_extreme_xy.longitude, df_no_extreme_xy.latitude))
+    if df_no_extreme_xy.shape[0] < 0.5*df.shape[0]:
+        gdf = gpd.GeoDataFrame(
+        df, geometry=gpd.points_from_xy(df.longitude, df.latitude))
+    else:
+        gdf = gpd.GeoDataFrame(
+            df_no_extreme_xy, geometry=gpd.points_from_xy(df_no_extreme_xy.longitude, df_no_extreme_xy.latitude))
     return gdf
 
 def getNoisyPoints(minx, miny, maxx, maxy, raw_points, eps):
@@ -111,10 +114,11 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme
             result = [lap_x.randomise(result.x), lap_y.randomise(result.y)]
 
     elif "st_union" in select_query:
-        result = geo_df.dissolve().union
+        print(geo_df[datapoint_attribute])
+        result = geometry.Polygon([[p.x, p.y] for p in geo_df[datapoint_attribute]])
         if noisy_result:
             result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon))
-            result.dissolve().union
+            result = geometry.Polygon([[p.x, p.y] for p in result[datapoint_attribute]])
         
     else:
         result = ""
