@@ -1,6 +1,6 @@
 import time
 
-from dpgis.geo_dp_functions import noisy_sql_response
+from geo_dp_functions import noisy_sql_response
 import geopandas as gpd
 
 
