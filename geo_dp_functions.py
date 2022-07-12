@@ -73,7 +73,7 @@ def addLaplaceToResponse(minx, miny, maxx, maxy, response, eps):
 def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_points, noisy_result):
     #points relevant to query
     points = getQueryPoints(query, datapoint_attribute, conn)
-    print("points wo noise: ", points)
+    #print("points wo noise: ", points)
     #get extreme points
     minx, miny, maxx, maxy = getExtremePoints(points)
     xsensitivity = maxx-minx
@@ -83,21 +83,21 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme
 
     if remove_extreme_points:
         #points relevant to query WITHOUT extreme points
-        print("removing extreme points")
+        #print("removing extreme points")
         points = removeExtremePoints(points, datapoint_attribute)
-        print("removed extreme points")
+        #print("removed extreme points")
     
     #points (with or without extreme points) as geodf WITHOUT noise
-    print("defining geo_df")
-    print("points (w/o extreme?): ", points)
-    print("points type: ", type(points))
-    print("points['geometry'].x: ", points['geometry'].x)
+    #print("defining geo_df")
+    #print("points (w/o extreme?): ", points)
+    #print("points type: ", type(points))
+    #print("points['geometry'].x: ", points['geometry'].x)
     geo_df = gpd.GeoDataFrame(points, crs="EPSG:4326")
     if noisy_points:
         #point as geodf WITH noise
-        print("get noisy points")
+        #print("get noisy points")
         geo_df = getNoisyPoints(minx, miny, maxx, maxy, points, float(epsilon))
-        print("defined geo_df")
+        #print("defined geo_df")
 
     select_query =  getQueryParts(query)[0].lower()
     if "st_envelope" in select_query:
