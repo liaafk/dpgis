@@ -5,7 +5,7 @@ from pandasql import sqldf
 from shapely import geometry
 
 def testquery(conn, sql):
-    df = gpd.GeoDataFrame.from_postgis(sql, conn, geom_col='loc' )
+    df = gpd.GeoDataFrame.from_postgis(sql, conn, geom_col='loc')
     return(df)
     
 def ANON_ST_Envelope(cur, query):
@@ -114,11 +114,10 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme
             result = [lap_x.randomise(result.x), lap_y.randomise(result.y)]
 
     elif "st_union" in select_query:
-        print(geo_df[datapoint_attribute])
-        result = geometry.Polygon([[p.x, p.y] for p in geo_df[datapoint_attribute]])
+        result = geometry.Polygon([[p.x, p.y] for p in geo_df.geometry])
         if noisy_result:
             result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon))
-            result = geometry.Polygon([[p.x, p.y] for p in result[datapoint_attribute]])
+            result = geometry.Polygon([[p.x, p.y] for p in result.geometry])
         
     else:
         result = ""

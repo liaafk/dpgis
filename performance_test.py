@@ -1,6 +1,6 @@
 import time
 import csv
-from geo_dp_functions import noisy_sql_response
+from geo_dp_functions import getQueryParts, noisy_sql_response
 import geopandas as gpd
 import psycopg2
 #import pydp as dp
@@ -11,6 +11,7 @@ import numpy as np
 from itertools import product
 import sys
 import config_file
+from shapely import geometry
 
 def config(filename='database.ini', section='postgresql'):
     # create a parser
@@ -45,51 +46,68 @@ def connect():
         cur = conn.cursor()
 
         epsilon = 1.0
-        datapoint_attribute = "loc"
+        datapoint_attribute = 'loc'
         remove_extreme_points = True
         noisy_points = True
         noisy_result = True
-        with open('file.csv', newline='') as f:
+        with open('query_list.csv', newline='') as f:
             reader = csv.reader(f)
-            query_list = list(reader)
+            query_list = [x[0] for x in reader]#list(reader)
+            print(query_list)
+        with open('query_list_postgis.csv', newline='') as f:
+            reader = csv.reader(f)
+            query_list_postgis = [x[0] for x in reader]#list(reader)
+            print(query_list_postgis)
         meantime_noisy_list = [] #besser als df zusammen mit row with und without noise?
         meantime_wo_noise_list = []#^^^^^^^^^^^^
-        conn = "" #muss noch hinzugefügt bzw. übergeben werden
-
+        for query in query_list:
+            print(query)
         #execute all queries of query_list with noise
         for query in query_list:
+            print("********************QUERY****************************")
+            print(query)
             #execute each query 10 times and calculate the mean
-            for l in range (1, 11):
+            for l in range(1, 10):
                 time_noisy = 0
                 start = time.time()
                 response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_points, noisy_result)
                 end = time.time()
                 t = end - start
                 time_noisy += t
-            meantime_noisy = time_noisy/query_list.len()
+            meantime_noisy = time_noisy/len(query_list)
             meantime_noisy_list.append(meantime_noisy)
+        print("**********************************************************")
         print("meantime_noisy_list: ", meantime_noisy_list)
+        print("**********************************************************")
 
         #execute all queries of query_list without noise
-        for query in query_list:
-            for l in range (1, 11):
+        for query in query_list_postgis:
+            print("********************QUERY****************************")
+            for l in range (1, 5):
                 time_wo_noise = 0
                 start = time.time()
-                response = gpd.GeoDataFrame.from_postgis(query, conn, datapoint_attribute)
+                print(query)
+                type_select = query.split()[1].lower().split('(')[0]
+                print(type_select)
+                response = gpd.read_postgis(query, conn, geom_col=type_select)
+
+                #response = gpd.GeoDataFrame.from_postgis(query, conn)#, geom_col=datapoint_attribute)
                 end = time.time()
                 t = end - start
                 time_wo_noise += t
-            meantime_wo_noise = time_wo_noise/query_list.len()
+            meantime_wo_noise = time_wo_noise/len(query_list)
             meantime_wo_noise_list.append(meantime_wo_noise)
+        print("**********************************************************")
         print("meantime_wo_noise_list: ", meantime_wo_noise_list)
+        print("**********************************************************")
 
-        labels = ['Bounding Box', 'Geometric Center', 'Union']
+        labels = ['BB100', 'BB1000', 'Centroid100', 'Centroid1000', 'Union100', 'Union1000']
         #men_means = [20, 34, 30, 35, 27]
         #women_means = [25, 32, 34, 20, 25]
 
         x = np.arange(len(labels))  # the label locations
         width = 0.35  # the width of the bars
-
+        plt.xticks(rotation=45)
         fig, ax = plt.subplots()
         rects1 = ax.bar(x - width/2, meantime_noisy_list, width, label='With noise')
         rects2 = ax.bar(x + width/2, meantime_wo_noise_list, width, label='Without noise')
@@ -121,9 +139,25 @@ if __name__ == '__main__':
     connect()
 
 
+def sql_response(query, datapoint_attribute, conn):
+    #points relevant to query
+    points = getQueryPoints(query, datapoint_attribute, conn)
+    #print("points wo noise: ", points)
 
+    geo_df = gpd.GeoDataFrame(points, crs="EPSG:4326")
+    select_query =  getQueryParts(query)[0].lower()
+    if "st_envelope" in select_query:
+        result = geo_df.dissolve().total_bounds
+           
+    elif "st_centroid" in select_query:
+        result = geo_df.dissolve().centroid[0]
 
-
-
-
-    
+    elif "st_union" in select_query:
+        print(geo_df.longitude)
+        result = geometry.Polygon([[p.x, p.y] for p in geo_df])
+        
+    else:
+        result = ""
+        print("ERROR: No geo spacial method found in SELECT-part.")
+    print("Result: ")
+    return result

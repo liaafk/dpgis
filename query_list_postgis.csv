@@ -1,0 +1,6 @@
+SELECT ST_ENVELOPE(ST_UNION(loc)) FROM orders_de WHERE restaurant = 'Italian' LIMIT 100;
+SELECT ST_ENVELOPE(ST_UNION(loc)) FROM orders_de WHERE restaurant = 'Italian' LIMIT 1000;
+SELECT ST_CENTROID(ST_UNION(loc)) FROM orders_de WHERE restaurant = 'Italian' LIMIT 100;
+SELECT ST_CENTROID(ST_UNION(loc)) FROM orders_de WHERE restaurant = 'Italian' LIMIT 1000;
+SELECT ST_UNION(loc) FROM orders_de WHERE restaurant = 'Italian' LIMIT 100;
+SELECT ST_UNION(loc) FROM orders_de WHERE restaurant = 'Italian' LIMIT 1000;
