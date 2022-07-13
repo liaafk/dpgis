@@ -50,19 +50,21 @@ def removeExtremePoints(raw_points, datapoint_attribute):
     else:
         gdf = gpd.GeoDataFrame(
             df_no_extreme_xy, geometry=gpd.points_from_xy(df_no_extreme_xy.longitude, df_no_extreme_xy.latitude))
+    gdf.rename_geometry(datapoint_attribute, inplace=True)
     return gdf
 
-def getNoisyPoints(minx, miny, maxx, maxy, raw_points, eps):
+def getNoisyPoints(minx, miny, maxx, maxy, raw_points, eps, datapoint_attribute):
     xsensitivity = maxx-minx
     ysensitivity = maxy-miny
-    raw_points_x = raw_points['geometry'].x
-    raw_points_y = raw_points['geometry'].y
+    raw_points_x = raw_points[datapoint_attribute].x
+    raw_points_y = raw_points[datapoint_attribute].y
     lap_x = diffprivlib.mechanisms.LaplaceBoundedDomain(epsilon=eps, sensitivity=xsensitivity, lower=minx, upper=maxx)
     lap_y = diffprivlib.mechanisms.LaplaceBoundedDomain(epsilon=eps, sensitivity=ysensitivity, lower=miny, upper=maxy)
     noisy_points_x = raw_points_x.apply(lambda val: lap_x.randomise(value=val))
     noisy_points_y = raw_points_y.apply(lambda val: lap_y.randomise(value=val))
     df = {"longitude": noisy_points_x, "latitude": noisy_points_y}
     gdf = gpd.GeoDataFrame(df, geometry=gpd.points_from_xy(df['longitude'], df['latitude']), crs="EPSG:4326")
+    gdf.rename_geometry(datapoint_attribute, inplace=True)
     return gdf
 
 def addLaplaceToResponse(minx, miny, maxx, maxy, response, eps):
@@ -86,7 +88,6 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme
 
     if remove_extreme_points:
         #points relevant to query WITHOUT extreme points
-        #print("removing extreme points")
         points = removeExtremePoints(points, datapoint_attribute)
         #print("removed extreme points")
     
@@ -99,7 +100,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme
     if noisy_points:
         #point as geodf WITH noise
         #print("get noisy points")
-        geo_df = getNoisyPoints(minx, miny, maxx, maxy, points, float(epsilon))
+        geo_df = getNoisyPoints(minx, miny, maxx, maxy, points, float(epsilon), datapoint_attribute)
         #print("defined geo_df")
 
     select_query =  getQueryParts(query)[0].lower()
@@ -114,10 +115,10 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme
             result = [lap_x.randomise(result.x), lap_y.randomise(result.y)]
 
     elif "st_union" in select_query:
-        result = geometry.Polygon([[p.x, p.y] for p in geo_df.geometry])
+        result = geometry.Polygon([[p.x, p.y] for p in list(geo_df.geometry)])
         if noisy_result:
-            result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon))
-            result = geometry.Polygon([[p.x, p.y] for p in result.geometry])
+            result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon), datapoint_attribute)
+            result = geometry.Polygon([[p.x, p.y] for p in list(result.geometry)])
         
     else:
         result = ""

@@ -45,9 +45,9 @@ def connect():
         # create a cursor
         cur = conn.cursor()
 
-        epsilon = 1.0
+        epsilon = 100
         datapoint_attribute = 'loc'
-        remove_extreme_points = True
+        remove_extreme_points = False
         noisy_points = True
         noisy_result = True
         with open('query_list.csv', newline='') as f:
@@ -60,20 +60,20 @@ def connect():
             print(query_list_postgis)
         meantime_noisy_list = [] #besser als df zusammen mit row with und without noise?
         meantime_wo_noise_list = []#^^^^^^^^^^^^
-        for query in query_list:
-            print(query)
         #execute all queries of query_list with noise
+        noisy_responses = []
         for query in query_list:
             print("********************QUERY****************************")
             print(query)
             #execute each query 10 times and calculate the mean
-            for l in range(1, 10):
+            for l in range(1, 11):
                 time_noisy = 0
                 start = time.time()
                 response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_points, noisy_result)
                 end = time.time()
                 t = end - start
                 time_noisy += t
+            noisy_responses.append(response)
             meantime_noisy = time_noisy/len(query_list)
             meantime_noisy_list.append(meantime_noisy)
         print("**********************************************************")
@@ -81,22 +81,21 @@ def connect():
         print("**********************************************************")
 
         #execute all queries of query_list without noise
+        responses = []
         for query in query_list_postgis:
             print("********************QUERY****************************")
-            for l in range (1, 5):
+            for l in range (1, 11):
                 time_wo_noise = 0
                 start = time.time()
-                print(query)
                 type_select = query.split()[1].lower().split('(')[0]
-                print(type_select)
                 response = gpd.read_postgis(query, conn, geom_col=type_select)
-
                 #response = gpd.GeoDataFrame.from_postgis(query, conn)#, geom_col=datapoint_attribute)
                 end = time.time()
                 t = end - start
                 time_wo_noise += t
             meantime_wo_noise = time_wo_noise/len(query_list)
             meantime_wo_noise_list.append(meantime_wo_noise)
+            responses.append(response)
         print("**********************************************************")
         print("meantime_wo_noise_list: ", meantime_wo_noise_list)
         print("**********************************************************")
@@ -133,10 +132,13 @@ def connect():
         if conn is not None:
             conn.close()
             print('Database connection closed.')
+    return noisy_responses, responses
 
 
 if __name__ == '__main__':
-    connect()
+    noisy_responses, responses = connect()
+    print(noisy_responses)
+    print(responses)
 
 
 def sql_response(query, datapoint_attribute, conn):
