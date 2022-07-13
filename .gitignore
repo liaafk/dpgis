@@ -2,3 +2,4 @@ database.ini
 __pycache__/
 .ipynb_checkpoints/
 get-pip.py
+__pycache__/geo_dp_functions.cpython-310.pyc

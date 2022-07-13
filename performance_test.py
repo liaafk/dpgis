@@ -53,11 +53,28 @@ def connect():
         with open('query_list.csv', newline='') as f:
             reader = csv.reader(f)
             query_list = [x[0] for x in reader]#list(reader)
-            print(query_list)
+            #print(query_list)
         with open('query_list_postgis.csv', newline='') as f:
             reader = csv.reader(f)
             query_list_postgis = [x[0] for x in reader]#list(reader)
-            print(query_list_postgis)
+            #print(query_list_postgis)
+
+        noisy_responses, responses = compare_noise_without(query_list, query_list_postgis, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_points, noisy_result)
+        print("Comparison noise or without noise: ", noisy_responses, responses)
+        
+        response_extreme, response_points, response_result = compare_noise_options(query_list, datapoint_attribute, conn, epsilon)
+        print("Options result: ", response_extreme, response_points, response_result)
+	# close the communication with the PostgreSQL
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print('Database connection closed.')
+    return noisy_responses, responses
+
+def compare_noise_without(query_list, query_list_postgis, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_points, noisy_result):
         meantime_noisy_list = []
         meantime_wo_noise_list = []
         #execute all queries of query_list with noise
@@ -66,7 +83,7 @@ def connect():
             print("********************QUERY****************************")
             print(query)
             #execute each query 10 times and calculate the mean
-            for l in range(1, 11):
+            for l in range(1, 31):
                 time_noisy = 0
                 start = time.time()
                 response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_points, noisy_result)
@@ -74,7 +91,7 @@ def connect():
                 t = end - start
                 time_noisy += t
             noisy_responses.append(response)
-            meantime_noisy = time_noisy/10
+            meantime_noisy = time_noisy/30
             meantime_noisy_list.append(meantime_noisy)
         print("**********************************************************")
         print("meantime_noisy_list: ", meantime_noisy_list)
@@ -84,7 +101,7 @@ def connect():
         responses = []
         for query in query_list_postgis:
             print("********************QUERY****************************")
-            for l in range (1, 11):
+            for l in range (1, 31):
                 time_wo_noise = 0
                 start = time.time()
                 type_select = query.split()[1].lower().split('(')[0]
@@ -93,7 +110,7 @@ def connect():
                 end = time.time()
                 t = end - start
                 time_wo_noise += t
-            meantime_wo_noise = time_wo_noise/10
+            meantime_wo_noise = time_wo_noise/30
             meantime_wo_noise_list.append(meantime_wo_noise)
             responses.append(response)
         print("**********************************************************")
@@ -111,7 +128,7 @@ def connect():
 
         # Add some text for labels, title and custom x-axis tick labels, etc.
         ax.set_ylabel('Execution time')
-        ax.set_title('Query')
+        ax.set_title('With and without noise')
         ax.set_xticks(x, labels)
         ax.legend()
 
@@ -119,20 +136,8 @@ def connect():
         ax.bar_label(rects2, padding=3)
 
         fig.tight_layout()
-
-        #plt.show()
-
-        response_extreme, response_points, response_result = compare_noise_options(query_list, datapoint_attribute, conn, epsilon)
-        print("Options result: ", response_extreme, response_points, response_result)
-	# close the communication with the PostgreSQL
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-            print('Database connection closed.')
-    return noisy_responses, responses
+        plt.show()
+        return noisy_responses, responses
 
 def compare_noise_options(query_list, datapoint_attribute, conn, epsilon):
         meantime_delete_extreme = []
@@ -146,7 +151,7 @@ def compare_noise_options(query_list, datapoint_attribute, conn, epsilon):
             print("********************QUERY****************************")
             print(query)
             #execute each query 10 times and calculate the mean
-            for l in range(1, 11):
+            for l in range(1, 31):
                 #only deleting extreme points
                 time_extreme = 0
                 start = time.time()
@@ -172,15 +177,15 @@ def compare_noise_options(query_list, datapoint_attribute, conn, epsilon):
                 time_result += t
 
             noisy_responses_extreme.append(response_extreme)
-            meantime_extreme = time_extreme/10
+            meantime_extreme = time_extreme/30
             meantime_delete_extreme.append(meantime_extreme)
 
             noisy_responses_points.append(response_points)
-            meantime_points = time_points/10
+            meantime_points = time_points/30
             meantime_noisy_points.append(meantime_points)
 
             noisy_responses_result.append(response_result)
-            meantime_result = time_result/10
+            meantime_result = time_result/30
             meantime_noisy_result.append(meantime_result)
 
         print("**********************************************************")
