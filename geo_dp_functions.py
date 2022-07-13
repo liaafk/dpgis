@@ -96,7 +96,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme
     #print("points (w/o extreme?): ", points)
     #print("points type: ", type(points))
     #print("points['geometry'].x: ", points['geometry'].x)
-    geo_df = gpd.GeoDataFrame(points, crs="EPSG:4326")
+    geo_df = gpd.GeoDataFrame(points, geometry=datapoint_attribute, crs="EPSG:4326")
     if noisy_points:
         #point as geodf WITH noise
         #print("get noisy points")
