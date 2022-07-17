@@ -33,7 +33,7 @@ def getExtremePoints(raw_points):
     return raw_points.dissolve().total_bounds
 
 # removing extreme points of a GeoDataFrame
-def removeExtremePoints(raw_points, datapoint_attribute):
+def removeOutliers(raw_points, datapoint_attribute):
     raw_points_x = raw_points[datapoint_attribute].x
     raw_points_y = raw_points[datapoint_attribute].y
     d = {'longitude': raw_points_x, 'latitude': raw_points_y}
@@ -74,17 +74,15 @@ def getLaplaceDistribution(minx, miny, maxx, maxy, eps):
 
 # getting the noisy response of a SQL query containing a PostGIS function
 # possible PostGIS functions: ST_ENVELOPE, ST_EXTENT, ST_CENTROID, ST_UNION
-def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_points, noisy_result):
+def noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, noisy_result):
     # get points relevant to query
     points = getQueryPoints(query, datapoint_attribute, conn)
-    # get extreme points
+    # getting extreme points
     minx, miny, maxx, maxy = getExtremePoints(points)
     # adding laplace distribution
     lap_x, lap_y = getLaplaceDistribution(minx, miny, maxx, maxy, epsilon)
-
-    if remove_extreme_points:
-        # removing extreme points of GeoDataFrame
-        points = removeExtremePoints(points, datapoint_attribute)
+    # removing outliers
+    points = removeOutliers(points, datapoint_attribute)
 
     geo_df = gpd.GeoDataFrame(points, geometry=datapoint_attribute, crs="EPSG:4326")
     if noisy_points:
