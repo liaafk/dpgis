@@ -1,5 +1,4 @@
 import time
-import csv
 from geo_dp_functions import noisy_sql_response
 import geopandas as gpd
 import psycopg2
@@ -61,6 +60,9 @@ def connect():
         # comparing the option of noising each point, noising the result and doing both
         response_points, response_result, response_both_options = compare_noise_options(query_list, datapoint_attribute, conn, epsilon)
         print("Comparison of options result: ", response_points, response_result, response_both_options)
+
+        response_noisy_2, response_wo_postgis_func = compare_noise_with_request_wo_postgis_func(query_list, datapoint_attribute, conn, epsilon, noisy_points, noisy_result)
+        print("Comparison of noisy response and no PostGIS request result: ", response_noisy_2, response_wo_postgis_func)
 
 	# close the communication with the PostgreSQL
         cur.close()
@@ -221,6 +223,72 @@ def compare_noise_options(query_list, datapoint_attribute, conn, epsilon):
         plt.show()
         return response_points, response_result, response_both_options
 
+def compare_noise_with_request_wo_postgis_func(query_list, datapoint_attribute, conn, epsilon, noisy_points, noisy_result):
+        meantime_noisy_list = []
+        meantime_wo_noise_wo_postgis_fun_list = []
+        # executing all queries of query_list with noise
+        noisy_responses = []
+        print("*****************RESPONES WITH NOISE*****************")
+        for query in query_list:
+            print(query)
+            # executing each query 1000 times and calculate the mean
+            for l in range(1, 2):
+                time_noisy = 0
+                start = time.time()
+                response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, noisy_result)
+                end = time.time()
+                t = end - start
+                time_noisy += t
+            noisy_responses.append(response)
+            meantime_noisy = time_noisy/1
+            meantime_noisy_list.append(meantime_noisy)
+        print("**********************************************************")
+        print("meantime_noisy_list: ", meantime_noisy_list)
+        print("**********************************************************")
+        
+        with open('query_list_wo_postgis_func.txt', newline='') as f:
+            query_list_wo_postgis_func = f.readlines()
+
+        # executing all queries of query_list_wo_postgis_func without noise
+        responses = []
+        print("*****************RESPONES WITHOUT NOISE*****************")
+        for query in query_list_wo_postgis_func:
+            for l in range (1, 2):
+                time_wo_noise = 0
+                start = time.time()
+                to_read = query.split()[1].lower()
+                type_select = to_read.split('(')[0]
+                response = gpd.read_postgis(query, conn, geom_col=type_select)
+                end = time.time()
+                t = end - start
+                time_wo_noise += t
+            meantime_wo_noise = time_wo_noise/1
+            meantime_wo_noise_wo_postgis_fun_list.append(meantime_wo_noise)
+            responses.append(response)
+        print("**********************************************************")
+        print("meantime_wo_noise_wo_postgis_fun_list: ", meantime_wo_noise_wo_postgis_fun_list)
+        print("**********************************************************")
+
+        # putting results into a diagram
+        labels = ['BB100', 'BB1000', 'Extent100', 'Extent1000', 'Centroid100', 'Centroid1000', 'Union100', 'Union1000']
+        x = np.arange(len(labels))
+        width = 0.35
+        plt.setp
+        fig, ax = plt.subplots(figsize=(10,8))
+        rects1 = ax.bar(x - width/2, meantime_noisy_list, width, label='With noise')
+        rects2 = ax.bar(x + width/2, meantime_wo_noise_wo_postgis_fun_list, width, label='Without noise, no PostGIS function')
+
+        ax.set_ylabel('Execution time')
+        ax.set_title('With noise and without noise (no PostGIS function)')
+        ax.set_xticks(x, labels)
+        ax.legend()
+
+        ax.bar_label(rects1, padding=3)
+        ax.bar_label(rects2, padding=3)
+        fig.autofmt_xdate()
+        #fig.tight_layout()
+        plt.show()
+        return noisy_responses, responses
 
 if __name__ == '__main__':
     con = connect()
