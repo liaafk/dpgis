@@ -1,13 +1,14 @@
 import geopandas as gpd
 import diffprivlib
 import pandas as pd
-from pandasql import sqldf
 from shapely import geometry
 
+# dividing the query into the SELECT- and FROM-part
 def getQueryParts(query):
     query_parts = query.rsplit("FROM")
     return(query_parts)
 
+# getting all points relevant to the query
 def getQueryPoints(query, datapoint_attribute, conn):
     try:
         part_from = getQueryParts(query)[1]
@@ -22,9 +23,11 @@ def getQueryPoints(query, datapoint_attribute, conn):
     raw_points = gpd.GeoDataFrame.from_postgis(raw_points_query, conn, datapoint_attribute)
     return raw_points
 
+# getting the extreme points of a GeoDataFrame
 def getExtremePoints(raw_points):
     return raw_points.dissolve().total_bounds
 
+# removing extreme points of a GeoDataFrame
 def removeExtremePoints(raw_points, datapoint_attribute):
     print("Removing extreme points")
     minx, miny, maxx, maxy = getExtremePoints(raw_points)
@@ -43,6 +46,7 @@ def removeExtremePoints(raw_points, datapoint_attribute):
     gdf.rename_geometry(datapoint_attribute, inplace=True)
     return gdf
 
+# add noise to all points of a GeoDataFrame
 def getNoisyPoints(minx, miny, maxx, maxy, raw_points, eps, datapoint_attribute):
     print("Noising points")
     raw_points_x = raw_points[datapoint_attribute].x
@@ -55,6 +59,7 @@ def getNoisyPoints(minx, miny, maxx, maxy, raw_points, eps, datapoint_attribute)
     gdf.rename_geometry(datapoint_attribute, inplace=True)
     return gdf
 
+# getting the Laplace distribution
 def getLaplaceDistribution(minx, miny, maxx, maxy, eps):
     xsensitivity = maxx-minx
     ysensitivity = maxy-miny
@@ -62,44 +67,54 @@ def getLaplaceDistribution(minx, miny, maxx, maxy, eps):
     lap_y = diffprivlib.mechanisms.LaplaceBoundedDomain(epsilon=eps, sensitivity=ysensitivity, lower=miny, upper=maxy)
     return lap_x, lap_y
 
+# getting the noisy response of a SQL query containing a PostGIS function
+# possible PostGIS functions: ST_ENVELOPE, ST_EXTENT, ST_CENTROID, ST_UNION
 def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme_points, noisy_points, noisy_result):
     # get points relevant to query
     points = getQueryPoints(query, datapoint_attribute, conn)
     # get extreme points
     minx, miny, maxx, maxy = getExtremePoints(points)
-    # adding laplace noise
+    # adding laplace distribution
     lap_x, lap_y = getLaplaceDistribution(minx, miny, maxx, maxy, epsilon)
 
     if remove_extreme_points:
+        # removing extreme points of GeoDataFrame
         points = removeExtremePoints(points, datapoint_attribute)
 
     geo_df = gpd.GeoDataFrame(points, geometry=datapoint_attribute, crs="EPSG:4326")
     if noisy_points:
-        # point as geodf WITH noise
+        # adding noise to all points in the GeoDataFrame
         geo_df = getNoisyPoints(minx, miny, maxx, maxy, points, float(epsilon), datapoint_attribute)
 
+    # finding PostGIS function in SELECT-part
     select_query =  getQueryParts(query)[0].lower()
     if "st_envelope" or "st_extent" in select_query:
+        # returning the bounding box of the GeoDataFrame
         result = geo_df.dissolve().total_bounds
         if noisy_result:
+            # adding noise to the bounding box
             print("Noising result")
             result = [lap_x.randomise(result[0]), lap_y.randomise(result[1]), lap_x.randomise(result[2]), lap_y.randomise(result[3])]
     
     elif "st_centroid" in select_query:
+        # returning the center of the GeoDataFrame
         result = geo_df.dissolve().centroid[0]
         if noisy_result:
+            # adding noise to the center point
             print("Noising result")
             result = [lap_x.randomise(result.x), lap_y.randomise(result.y)]
 
     elif "st_union" in select_query:
+        # returning the points of  the GeoDataFrame without overlap
         result = geometry.Polygon([[p.x, p.y] for p in list(geo_df.geometry)])
         if noisy_result:
+            # adding noise to each point in the GeoDataFrame
             print("Noising result")
             result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon), datapoint_attribute)
             result = geometry.Polygon([[p.x, p.y] for p in list(result.geometry)])
         
     else:
-        result = ""
+        result = "-"
         print("ERROR: No geo spacial method found in SELECT-part.")
     print("Result: ")
     return result

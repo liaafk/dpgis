@@ -1,5 +1,4 @@
 import psycopg2
-#import pydp as dp
 from configparser import ConfigParser
 from geo_dp_functions import noisy_sql_response
 from itertools import product
@@ -37,7 +36,7 @@ def connect():
         # create a cursor
         cur = conn.cursor()
 
-    # Get SQL Query and name of the attribute datapoint in table
+    # Get SQL Query and name of the attribute datapoint in table out of the config file
         query = list(config_file.QUERY)
         datapoint_attribute = [config_file.DATAPOINT_ATTRIBUTE]
         epsilon = list(config_file.EPSILON)
@@ -45,7 +44,7 @@ def connect():
         noisy_points = list(config_file.NOISY_POINTS)
         noisy_result = list(config_file.NOISY_RESULT)
     
-    # Get raw points of query
+    # Executing query using the noisy SQL query
         for (iter_query, iter_datapoint_attribute, iter_epsilon, iter_remove_extreme_points, iter_noisy_points, iter_noisy_result) in product(query, datapoint_attribute, epsilon, remove_extreme_points, noisy_points, noisy_result):
             print(iter_query, iter_datapoint_attribute, iter_epsilon, iter_remove_extreme_points, iter_noisy_points, iter_noisy_result)
             print(noisy_sql_response(iter_query, iter_datapoint_attribute, conn, iter_epsilon, iter_remove_extreme_points, iter_noisy_points, iter_noisy_result))
