@@ -1,4 +1,5 @@
 import geopandas as gpd
+import numpy as np
 import diffprivlib
 import pandas as pd
 from shapely import geometry
@@ -8,7 +9,11 @@ def getQueryParts(query):
     query_parts = query.rsplit("FROM")
     return(query_parts)
 
-# getting all points relevant to the query
+def outliers_iqr(ys):
+    quartile_1, quartile_3 = np.percentile(ys, [25, 75])
+    iqr = quartile_3 - quartile_1
+    return quartile_1 - (iqr * 1.5), quartile_3 + (iqr * 1.5)
+
 def getQueryPoints(query, datapoint_attribute, conn):
     try:
         part_from = getQueryParts(query)[1]
@@ -29,20 +34,20 @@ def getExtremePoints(raw_points):
 
 # removing extreme points of a GeoDataFrame
 def removeExtremePoints(raw_points, datapoint_attribute):
-    print("Removing extreme points")
-    minx, miny, maxx, maxy = getExtremePoints(raw_points)
     raw_points_x = raw_points[datapoint_attribute].x
     raw_points_y = raw_points[datapoint_attribute].y
     d = {'longitude': raw_points_x, 'latitude': raw_points_y}
     df= pd.DataFrame(d)
-    df_no_extreme_x = df[~df['longitude'].isin([minx, maxx])]
-    df_no_extreme_xy = df_no_extreme_x[~df_no_extreme_x['latitude'].isin([miny, maxy])]
-    if df_no_extreme_xy.shape[0] < 0.25*df.shape[0]:
-        gdf = gpd.GeoDataFrame(
-        df, geometry=gpd.points_from_xy(df.longitude, df.latitude))
-    else:
-        gdf = gpd.GeoDataFrame(
-            df_no_extreme_xy, geometry=gpd.points_from_xy(df_no_extreme_xy.longitude, df_no_extreme_xy.latitude))
+    lowerx, upperx = outliers_iqr(df['longitude'].values)
+    lowery, uppery = outliers_iqr(df['latitude'].values)
+    df_no_extreme_x = df[df['longitude'].between(lowerx, upperx)]
+    df_no_extreme_xy = df_no_extreme_x[df_no_extreme_x['latitude'].between(lowery, uppery)]
+    #if df_no_extreme_xy.shape[0] < 0.25*df.shape[0]:
+    #    gdf = gpd.GeoDataFrame(
+    #    df, geometry=gpd.points_from_xy(df.longitude, df.latitude))
+    #else:
+    gdf = gpd.GeoDataFrame(
+        df_no_extreme_xy, geometry=gpd.points_from_xy(df_no_extreme_xy.longitude, df_no_extreme_xy.latitude))
     gdf.rename_geometry(datapoint_attribute, inplace=True)
     return gdf
 
@@ -88,7 +93,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme
 
     # finding PostGIS function in SELECT-part
     select_query =  getQueryParts(query)[0].lower()
-    if "st_envelope" or "st_extent" in select_query:
+    if "st_envelope" in select_query or "st_extent" in select_query:
         # returning the bounding box of the GeoDataFrame
         result = geo_df.dissolve().total_bounds
         if noisy_result:
@@ -111,7 +116,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme
             # adding noise to each point in the GeoDataFrame
             print("Noising result")
             result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon), datapoint_attribute)
-            result = geometry.Polygon([[p.x, p.y] for p in list(result.geometry)])
+            result = [[p.x, p.y] for p in list(result.geometry)]
         
     else:
         result = "-"
