@@ -1,5 +1,5 @@
-QUERY = ["SELECT ST_UNION(loc) FROM orders_de LIMIT 10"]
+QUERY = ["SELECT ST_ENVELOPE(loc) FROM orders_de WHERE restaurant='Italian' LIMIT 100"]
 DATAPOINT_ATTRIBUTE = 'loc'
-EPSILON = [2.0]
-NOISY_POINTS = [False]
-NOISY_RESULT = [False]
+EPSILON = [10000]
+NOISY_POINTS = [False, True]
+NOISY_RESULT = [True]
