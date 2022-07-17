@@ -120,8 +120,8 @@ def compare_noise_without(query_list, query_list_postgis, datapoint_attribute, c
         labels = ['BB100', 'BB1000', 'Extent100', 'Extent1000', 'Centroid100', 'Centroid1000', 'Union100', 'Union1000']
         x = np.arange(len(labels))
         width = 0.35
-        plt.xticks(rotation=45)
-        fig, ax = plt.subplots()
+        plt.setp
+        fig, ax = plt.subplots(figsize=(10,8))
         rects1 = ax.bar(x - width/2, meantime_noisy_list, width, label='With noise')
         rects2 = ax.bar(x + width/2, meantime_wo_noise_list, width, label='Without noise')
 
@@ -132,8 +132,8 @@ def compare_noise_without(query_list, query_list_postgis, datapoint_attribute, c
 
         ax.bar_label(rects1, padding=3)
         ax.bar_label(rects2, padding=3)
-
-        fig.tight_layout()
+        fig.autofmt_xdate()
+        #fig.tight_layout()
         plt.show()
         return noisy_responses, responses
 
@@ -202,9 +202,9 @@ def compare_noise_options(query_list, datapoint_attribute, conn, epsilon):
         # putting results into a diagram
         labels = ['BB100', 'BB1000']
         x = np.arange(len(labels))
-        width = 0.15
-        plt.xticks(rotation=45)
-        fig, ax = plt.subplots()
+        width = 0.25
+        plt.setp
+        fig, ax = plt.subplots(figsize=(10,8))
         rects1 = ax.bar(x, meantime_noisy_points_list, width, label='Noise Points')
         rects2 = ax.bar(x + width, meantime_noisy_result_list, width, label='Noise Result')
         rects3 = ax.bar(x - width, meantime_both_options_list, width, label='Noise Points and Result')
@@ -217,8 +217,7 @@ def compare_noise_options(query_list, datapoint_attribute, conn, epsilon):
         ax.bar_label(rects1, padding=3)
         ax.bar_label(rects2, padding=3)
         ax.bar_label(rects3, padding=3)
-
-        fig.tight_layout()
+        fig.autofmt_xdate()
         plt.show()
         return response_points, response_result, response_both_options
 
