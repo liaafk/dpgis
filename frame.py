@@ -1,6 +1,6 @@
 import psycopg2
 from configparser import ConfigParser
-from geo_dp_functions import noisy_sql_response
+from geo_dp_functions import noisy_sql_response, getNoisyPoints, getQueryPoints
 from itertools import product
 import config_file
 
