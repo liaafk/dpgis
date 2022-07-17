@@ -2,6 +2,7 @@ import psycopg2
 from configparser import ConfigParser
 from geo_dp_functions import noisy_sql_response
 from itertools import product
+from local_dp import square_mechanism
 import config_file
 
 def config(filename='database.ini', section='postgresql'):

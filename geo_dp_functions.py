@@ -84,7 +84,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, 
     # removing outliers
     points = removeOutliers(points, datapoint_attribute)
 
-    geo_df = gpd.GeoDataFrame(points, geometry=datapoint_attribute, crs="EPSG:4326")
+    geo_df = gpd.GeoDataFrame(points, geometry=datapoint_attribute, crs="4326")
     if noisy_points:
         # adding noise to all points in the GeoDataFrame
         geo_df = getNoisyPoints(minx, miny, maxx, maxy, points, float(epsilon), datapoint_attribute)
@@ -101,7 +101,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, 
     
     elif "st_centroid" in select_query:
         # returning the center of the GeoDataFrame
-        result = geo_df.dissolve().centroid[0]
+        result = geo_df.to_crs(epsg=4326).dissolve().centroid[0]
         if noisy_result:
             # adding noise to the center point
             print("Noising result")
