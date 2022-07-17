@@ -4,16 +4,6 @@ import pandas as pd
 from pandasql import sqldf
 from shapely import geometry
 
-def testquery(conn, sql):
-    df = gpd.GeoDataFrame.from_postgis(sql, conn, geom_col='loc')
-    return(df)
-    
-def ANON_ST_Envelope(cur, query):
-    cur.execute(query)
-    query_results = cur.fetchall()
-
-    return(query_results)
-
 def getQueryParts(query):
     print("Splitting parts of query...")
     query_parts = query.rsplit("FROM")
@@ -44,7 +34,7 @@ def removeExtremePoints(raw_points, datapoint_attribute):
     df= pd.DataFrame(d)
     df_no_extreme_x = df[~df['longitude'].isin([minx, maxx])]
     df_no_extreme_xy = df_no_extreme_x[~df_no_extreme_x['latitude'].isin([miny, maxy])]
-    if df_no_extreme_xy.shape[0] < 0.5*df.shape[0]:
+    if df_no_extreme_xy.shape[0] < 0.25*df.shape[0]:
         gdf = gpd.GeoDataFrame(
         df, geometry=gpd.points_from_xy(df.longitude, df.latitude))
     else:
@@ -104,7 +94,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, remove_extreme
         #print("defined geo_df")
 
     select_query =  getQueryParts(query)[0].lower()
-    if "st_envelope" in select_query:
+    if "st_envelope" or "st_extent" in select_query:
         result = geo_df.dissolve().total_bounds
         if noisy_result:
             result = [lap_x.randomise(result[0]), lap_y.randomise(result[1]), lap_x.randomise(result[2]), lap_y.randomise(result[3])]
