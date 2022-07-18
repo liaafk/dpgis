@@ -1,6 +1,6 @@
 # dpgis
 
-This ist the code to run the local differential privacy (LDP) proxy for PostGIS. We implement the LDP algorithm as stated in [collecting].
+This ist the code to run the DP-based proxy for PostGIS. We implement the LDP algorithm as stated in [1].
 
 ## How to use
 
@@ -17,7 +17,7 @@ Within `config_file.py` you can define
 ```
 QUERY: list of queries to be run
 DATAPOINT_ATTRIBUTE: the name of the PostGIS database column containing geometry data
-EPSILON: 
+EPSILON: the privacy parameter for Laplace/square mechanism
 NOISY_POINTS: Whether to use Laplace noise
 LOCAL_DP: Whether to use the square mechanism (LDP)
 ```
@@ -40,3 +40,5 @@ python main.py
 ```
 
 To see examples of queries currently supported by the proxy, see `query_list.txt`.
+
+[1] D. Hong, W. Jung and K. Shim, "Collecting Geospatial Data with Local Differential Privacy for Personalized Services," 2021 IEEE 37th International Conference on Data Engineering (ICDE), 2021, pp. 2237-2242, doi: 10.1109/ICDE51399.2021.00230.
