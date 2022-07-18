@@ -26,10 +26,12 @@ Be aware that only one of NOISY_POINTS and LOCAL_DP can be [True] at a time.
 
 To connect with your PostGIS database, configure the following in `database.ini`:
 
+```
 host: the location of your PostgreSQL server
 database: the name of your PostGIS database
 user: username to connect to your database
 password: password to connect to your database
+```
 
 Once configuring is finished, the proxy is ready to use by running the following command:
 
