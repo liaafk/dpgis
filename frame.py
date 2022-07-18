@@ -42,12 +42,13 @@ def connect():
         datapoint_attribute = [config_file.DATAPOINT_ATTRIBUTE]
         epsilon = list(config_file.EPSILON)
         noisy_points = list(config_file.NOISY_POINTS)
-        noisy_result = list(config_file.NOISY_RESULT)
+        #noisy_result = list(config_file.NOISY_RESULT)
+        local_dp = list(config_file.LOCAL_DP)
     
     # Executing query using the noisy SQL query
-        for (iter_query, iter_datapoint_attribute, iter_epsilon, iter_noisy_points, iter_noisy_result) in product(query, datapoint_attribute, epsilon, noisy_points, noisy_result):
-            print(iter_query, iter_datapoint_attribute, iter_epsilon, iter_noisy_points, iter_noisy_result)
-            print(noisy_sql_response(iter_query, iter_datapoint_attribute, conn, iter_epsilon, iter_noisy_points, iter_noisy_result))
+        for (iter_query, iter_datapoint_attribute, iter_epsilon, iter_noisy_points, iter_local_dp) in product(query, datapoint_attribute, epsilon, noisy_points, local_dp):
+            print(iter_query, iter_datapoint_attribute, iter_epsilon, iter_noisy_points, iter_local_dp)
+            print(noisy_sql_response(iter_query, iter_datapoint_attribute, conn, iter_epsilon, iter_noisy_points, iter_local_dp))
 
 	# close the communication with the PostgreSQL
         cur.close()

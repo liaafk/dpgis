@@ -1,5 +1,6 @@
 QUERY = ["SELECT ST_ENVELOPE(loc) FROM orders_de WHERE restaurant='Italian' LIMIT 100"]
 DATAPOINT_ATTRIBUTE = 'loc'
-EPSILON = [10000]
-NOISY_POINTS = [False, True]
-NOISY_RESULT = [True]
+EPSILON = [15]
+NOISY_POINTS = [False]
+LOCAL_DP = [True]
+#NOISY_RESULT = [True]

@@ -3,6 +3,7 @@ import numpy as np
 import diffprivlib
 import pandas as pd
 from shapely import geometry
+from local_dp import square_mechanism
 
 # dividing the query into the SELECT- and FROM-part
 def getQueryParts(query):
@@ -74,7 +75,7 @@ def getLaplaceDistribution(minx, miny, maxx, maxy, eps):
 
 # getting the noisy response of a SQL query containing a PostGIS function
 # possible PostGIS functions: ST_ENVELOPE, ST_EXTENT, ST_CENTROID, ST_UNION
-def noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, noisy_result):
+def noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, local_dp):
     # get points relevant to query
     points = getQueryPoints(query, datapoint_attribute, conn)
     # getting extreme points
@@ -88,34 +89,34 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, 
     if noisy_points:
         # adding noise to all points in the GeoDataFrame
         geo_df = getNoisyPoints(minx, miny, maxx, maxy, points, float(epsilon), datapoint_attribute)
-
+    else:
+        geo_df = square_mechanism(geo_df, float(epsilon), datapoint_attribute)
     # finding PostGIS function in SELECT-part
     select_query =  getQueryParts(query)[0].lower()
     if "st_envelope" in select_query or "st_extent" in select_query:
         # returning the bounding box of the GeoDataFrame
         result = geo_df.dissolve().total_bounds
-        if noisy_result:
+        #if noisy_result:
             # adding noise to the bounding box
-            print("Noising result")
-            result = [lap_x.randomise(result[0]), lap_y.randomise(result[1]), lap_x.randomise(result[2]), lap_y.randomise(result[3])]
+            #print("Noising result")
+            #result = [lap_x.randomise(result[0]), lap_y.randomise(result[1]), lap_x.randomise(result[2]), lap_y.randomise(result[3])]
     
     elif "st_centroid" in select_query:
         # returning the center of the GeoDataFrame
         result = geo_df.to_crs(epsg=4326).dissolve().centroid[0]
-        if noisy_result:
+        #if noisy_result:
             # adding noise to the center point
-            print("Noising result")
-            result = [lap_x.randomise(result.x), lap_y.randomise(result.y)]
+            #print("Noising result")
+            #result = [lap_x.randomise(result.x), lap_y.randomise(result.y)]
 
     elif "st_union" in select_query:
         # returning the points of  the GeoDataFrame without overlap
-        result = geometry.Polygon([[p.x, p.y] for p in list(geo_df.geometry)])
-        if noisy_result:
+        result = [[p.x, p.y] for p in list(geo_df.geometry)]
+        #if noisy_result:
             # adding noise to each point in the GeoDataFrame
-            print("Noising result")
-            result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon), datapoint_attribute)
-            result = [[p.x, p.y] for p in list(result.geometry)]
-        
+            #print("Noising result")
+            #result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon), datapoint_attribute)
+            #result = [[p.x, p.y] for p in list(result.geometry)]
     else:
         result = "-"
         print("ERROR: No geo spacial method found in SELECT-part.")
