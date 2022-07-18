@@ -14,11 +14,13 @@ pip install -r requirements.txt
 
 Within `config_file.py` you can define
 
+```
 QUERY: list of queries to be run
 DATAPOINT_ATTRIBUTE: the name of the PostGIS database column containing geometry data
 EPSILON: 
 NOISY_POINTS: Whether to use Laplace noise
 LOCAL_DP: Whether to use the square mechanism (LDP)
+```
 
 Be aware that only one of NOISY_POINTS and LOCAL_DP can be [True] at a time.
 
