@@ -96,27 +96,27 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, 
     if "st_envelope" in select_query or "st_extent" in select_query:
         # returning the bounding box of the GeoDataFrame
         result = geo_df.dissolve().total_bounds
-        #if noisy_result:
+        if noisy_points:
             # adding noise to the bounding box
             #print("Noising result")
-            #result = [lap_x.randomise(result[0]), lap_y.randomise(result[1]), lap_x.randomise(result[2]), lap_y.randomise(result[3])]
+            result = [lap_x.randomise(result[0]), lap_y.randomise(result[1]), lap_x.randomise(result[2]), lap_y.randomise(result[3])]
     
     elif "st_centroid" in select_query:
         # returning the center of the GeoDataFrame
         result = geo_df.to_crs(epsg=4326).dissolve().centroid[0]
-        #if noisy_result:
+        if noisy_points:
             # adding noise to the center point
             #print("Noising result")
-            #result = [lap_x.randomise(result.x), lap_y.randomise(result.y)]
+            result = [lap_x.randomise(result.x), lap_y.randomise(result.y)]
 
     elif "st_union" in select_query:
         # returning the points of  the GeoDataFrame without overlap
         result = [[p.x, p.y] for p in list(geo_df.geometry)]
-        #if noisy_result:
+        if noisy_points:
             # adding noise to each point in the GeoDataFrame
             #print("Noising result")
-            #result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon), datapoint_attribute)
-            #result = [[p.x, p.y] for p in list(result.geometry)]
+            result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon), datapoint_attribute)
+            result = [[p.x, p.y] for p in list(result.geometry)]
     else:
         result = "-"
         print("ERROR: No geo spacial method found in SELECT-part.")
