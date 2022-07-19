@@ -15,11 +15,11 @@ pip install -r requirements.txt
 Within `config_file.py` you can define
 
 ```
-QUERY: list of queries to be run
-DATAPOINT_ATTRIBUTE: the name of the PostGIS database column containing geometry data
-EPSILON: the privacy parameter for Laplace/square mechanism
-NOISY_POINTS: Whether to use Laplace noise
-LOCAL_DP: Whether to use the square mechanism (LDP)
+QUERY: [<list of queries to be run>]
+DATAPOINT_ATTRIBUTE: '<name of the PostGIS database column containing geometry data as a String>'
+EPSILON: [<privacy parameter epsilon for Laplace/square mechanism as a float>]
+NOISY_POINTS: [<boolean, whether to use Laplace noise>]
+LOCAL_DP: [<boolean, whether to use the square mechanism (LDP)>]
 ```
 
 Be aware that only one of NOISY_POINTS and LOCAL_DP can be [True] at a time.
@@ -27,10 +27,11 @@ Be aware that only one of NOISY_POINTS and LOCAL_DP can be [True] at a time.
 To connect with your PostGIS database, configure the following in `database.ini`:
 
 ```
-host: the location of your PostgreSQL server
-database: the name of your PostGIS database
-user: username to connect to your database
-password: password to connect to your database
+[postgresql]
+host: <the location of your PostgreSQL server>
+database: <the name of your PostGIS database>
+user: <username to connect to your database>
+password: <password to connect to your database>
 ```
 
 Once configuring is finished, the proxy is ready to use by running the following command:
