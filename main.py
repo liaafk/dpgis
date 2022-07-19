@@ -45,8 +45,9 @@ def connect():
         laplace_result = config_file.LAPLACE_RESULT
         local_dp = config_file.LOCAL_DP
 
+        # Check if privacy methods parameters are used correctly
         if (laplace_points or laplace_result) and local_dp:
-            print("choose Laplace or local DP!")
+            print("Cannot choose both Laplace and local DP!")
             return -1
     # Executing query using the noisy SQL query
         for (iter_query, iter_epsilon) in product(query, epsilon):

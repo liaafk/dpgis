@@ -1,8 +1,0 @@
-SELECT ST_ENVELOPE(ST_UNION(loc)) FROM orders_de WHERE restaurant = 'Italian' LIMIT 100;
-SELECT ST_ENVELOPE(ST_UNION(loc)) FROM orders_de WHERE restaurant = 'Italian' LIMIT 1000;
-SELECT ST_SetSRID(ST_EXTENT(loc), 4326) FROM orders_de WHERE restaurant = 'Italian' LIMIT 100;
-SELECT ST_SetSRID(ST_EXTENT(loc), 4326) FROM orders_de WHERE restaurant = 'Italian' LIMIT 1000;
-SELECT ST_CENTROID(ST_UNION(loc)) FROM orders_de WHERE restaurant = 'Italian' LIMIT 100;
-SELECT ST_CENTROID(ST_UNION(loc)) FROM orders_de WHERE restaurant = 'Italian' LIMIT 1000;
-SELECT ST_UNION(loc) FROM (SELECT loc FROM orders_de WHERE restaurant = 'Italian' LIMIT 100) AS foo;
-SELECT ST_UNION(loc) FROM (SELECT loc FROM orders_de WHERE restaurant = 'Italian' LIMIT 1000) AS foo;

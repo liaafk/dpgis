@@ -4,7 +4,7 @@ import random
 from scipy.optimize import minimize
 import geopandas as gpd
 
-#normalize points s.t. middle point == (0,0)
+#normalize points
 def normalize_points(xory_list):
     lower = min(xory_list)
     upper = max(xory_list)

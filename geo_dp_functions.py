@@ -2,7 +2,6 @@ import geopandas as gpd
 import numpy as np
 import diffprivlib
 import pandas as pd
-from shapely import geometry
 from local_dp import square_mechanism
 
 # dividing the query into the SELECT- and FROM-part
@@ -10,11 +9,13 @@ def getQueryParts(query):
     query_parts = query.rsplit("FROM")
     return(query_parts)
 
+# interquartile range method to determine q1 and q3
 def outliers_iqr(ys):
     quartile_1, quartile_3 = np.percentile(ys, [25, 75])
     iqr = quartile_3 - quartile_1
     return quartile_1 - (iqr * 1.5), quartile_3 + (iqr * 1.5)
 
+# get points affected by query
 def getQueryPoints(query, datapoint_attribute, conn):
     try:
         part_from = getQueryParts(query)[1]
@@ -33,7 +34,7 @@ def getQueryPoints(query, datapoint_attribute, conn):
 def getExtremePoints(raw_points):
     return raw_points.dissolve().total_bounds
 
-# removing extreme points of a GeoDataFrame
+# removing outliers of a GeoDataFrame using iqr
 def removeOutliers(raw_points, datapoint_attribute):
     raw_points_x = raw_points[datapoint_attribute].x
     raw_points_y = raw_points[datapoint_attribute].y
@@ -43,10 +44,6 @@ def removeOutliers(raw_points, datapoint_attribute):
     lowery, uppery = outliers_iqr(df['latitude'].values)
     df_no_extreme_x = df[df['longitude'].between(lowerx, upperx)]
     df_no_extreme_xy = df_no_extreme_x[df_no_extreme_x['latitude'].between(lowery, uppery)]
-    #if df_no_extreme_xy.shape[0] < 0.25*df.shape[0]:
-    #    gdf = gpd.GeoDataFrame(
-    #    df, geometry=gpd.points_from_xy(df.longitude, df.latitude))
-    #else:
     gdf = gpd.GeoDataFrame(
         df_no_extreme_xy, geometry=gpd.points_from_xy(df_no_extreme_xy.longitude, df_no_extreme_xy.latitude))
     gdf.rename_geometry(datapoint_attribute, inplace=True)
@@ -78,12 +75,12 @@ def getLaplaceDistribution(minx, miny, maxx, maxy, eps):
 def noisy_sql_response(query, datapoint_attribute, conn, epsilon, laplace_points, laplace_result, local_dp):
     # get points relevant to query
     points = getQueryPoints(query, datapoint_attribute, conn)
+    # removing outliers
+    points = removeOutliers(points, datapoint_attribute)
     # getting extreme points
     minx, miny, maxx, maxy = getExtremePoints(points)
     # adding laplace distribution
     lap_x, lap_y = getLaplaceDistribution(minx, miny, maxx, maxy, epsilon)
-    # removing outliers
-    points = removeOutliers(points, datapoint_attribute)
 
     geo_df = gpd.GeoDataFrame(points, geometry=datapoint_attribute, crs="4326")
     if laplace_points:
@@ -98,7 +95,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, laplace_points
         result = geo_df.dissolve().total_bounds
         if laplace_result:
             # adding noise to the bounding box
-            #print("Noising result")
+            print("Noising result")
             result = [lap_x.randomise(result[0]), lap_y.randomise(result[1]), lap_x.randomise(result[2]), lap_y.randomise(result[3])]
     
     elif "st_centroid" in select_query:
@@ -106,7 +103,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, laplace_points
         result = geo_df.to_crs(epsg=4326).dissolve().centroid[0]
         if laplace_result:
             # adding noise to the center point
-            #print("Noising result")
+            print("Noising result")
             result = [lap_x.randomise(result.x), lap_y.randomise(result.y)]
 
     elif "st_union" in select_query:
@@ -114,7 +111,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, laplace_points
         result = [[p.x, p.y] for p in list(geo_df.geometry)]
         if laplace_result:
             # adding noise to each point in the GeoDataFrame
-            #print("Noising result")
+            print("Noising result")
             result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon), datapoint_attribute)
             result = [[p.x, p.y] for p in list(result.geometry)]
     else:
