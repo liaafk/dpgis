@@ -49,4 +49,17 @@ python main.py
 
 To see examples of queries currently supported by the proxy, see `query_list.txt`.
 
+## Performance test
+
+This library also incluces a perfomance test which calculates the average latency of different requests out of the `query_list.txt`. Each request is sent 1000 times. To calcualte the average of the latency, the highest and the lowest 10% are not considered. The execution is as follows:
+
+``` bash
+python performance_test.py
+```
+
+The performance test results in a diagram showing the different requests on the horizontal axis and the average latency on the vertical axis. The bars represent the latencies. Here is an example:
+
+![Performance test example](performance_test_example.png)
+
+
 [1] D. Hong, W. Jung and K. Shim, "Collecting Geospatial Data with Local Differential Privacy for Personalized Services," 2021 IEEE 37th International Conference on Data Engineering (ICDE), 2021, pp. 2237-2242, doi: 10.1109/ICDE51399.2021.00230.
