@@ -9,7 +9,7 @@ The second option uses Lalpace noise mechanism. The Laplace noise function offer
 
 ## How to use
 
-Create a conda environment and install all necessary packages by running the following commands:
+It is required to create a conda environment and install all necessary packages by running the following commands:
 
 ``` bash
 conda create --name dpgis
@@ -17,19 +17,7 @@ conda activate dpgis
 pip install -r requirements.txt
 ```
 
-Within `config_file.py` you can define
-
-```
-QUERY: [<list of queries to be run>]
-DATAPOINT_ATTRIBUTE: '<name of the PostGIS database column containing geometry data as a String>'
-EPSILON: [<privacy parameter epsilon for Laplace/square mechanism as a float>]
-NOISY_POINTS: [<boolean, whether to use Laplace noise>]
-LOCAL_DP: [<boolean, whether to use the square mechanism (LDP)>]
-```
-
-Be aware that only one of NOISY_POINTS and LOCAL_DP can be [True] at a time.
-
-To connect with your PostGIS database, configure the following in `database.ini`:
+To connect the PostGIS database, the following file `database.ini` needs to be configured as followed:
 
 ```
 [postgresql]
@@ -39,7 +27,21 @@ user: <username to connect to your database>
 password: <password to connect to your database>
 ```
 
-Once configuring is finished, the proxy is ready to use by running the following command:
+
+`config_file.py` contains the conifugration and can be modified.
+Be aware that either LAPLACE_POINTS and LAPLACE_RESULT or LOCAL_DP can be [True] at a time.
+
+```
+QUERY: [<list of queries to be run>]
+DATAPOINT_ATTRIBUTE: '<name of the PostGIS database column containing geometry data as a String>'
+EPSILON: [<privacy parameter epsilon for Laplace/square mechanism as a float>]
+LAPLACE_POINTS: [<boolean, whether to add Laplace noise to each point>]
+LAPLACE_RESULT: [<boolean, whether to add Laplace noise to the result>]
+LOCAL_DP: [<boolean, whether to use the square mechanism (LDP)>]
+```
+
+
+Once configuring is finished, the proxy is ready to be used by running the following command:
 
 ``` bash
 python main.py
