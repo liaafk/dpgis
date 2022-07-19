@@ -46,9 +46,9 @@ def connect():
         #noisy_points = True
         #noisy_result = True
         #local_dp = True
-        repetitions = 1
+        repetitions = 1000
         # drops the upper and lower percentil, needs to be lower than 0,5
-        drop_percentile = float(0.0)
+        drop_percentile = float(0.1)
         # reading the query lists
         with open('query_list.txt', newline='') as f:
             #reader = csv.reader(f)
