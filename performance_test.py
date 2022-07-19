@@ -6,6 +6,7 @@ from configparser import ConfigParser
 from geo_dp_functions import noisy_sql_response
 import matplotlib.pyplot as plt
 import numpy as np
+import cProfile
 
 def config(filename='database.ini', section='postgresql'):
     # create a parser
@@ -264,7 +265,7 @@ def compare_noise_with_request_wo_postgis_func(query_list, datapoint_attribute, 
             for l in range(1, repetitions+1):
                 time_noisy = 0
                 start = time.time()
-                response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, local_dp)
+                response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, local_dp) 
                 end = time.time()
                 t = end - start
                 time_noisy += t
@@ -326,12 +327,12 @@ def compare_noise_with_request_wo_postgis_func(query_list, datapoint_attribute, 
         width = 0.35
         plt.setp
         fig, ax = plt.subplots(figsize=(10,8))
-        rects1 = ax.bar(x - 2*width/3, meantime_noisy_list, width, label='With noise')
-        rects2 = ax.bar(x, meantime_ldp_list, width, label='With LDP')
-        rects3 = ax.bar(x + 2*width/3, meantime_wo_noise_wo_postgis_fun_list, width, label='Without noise, no PostGIS function')
+        rects1 = ax.bar(x - 2*width/3, meantime_noisy_list, width, label='Laplace mechanism')
+        rects2 = ax.bar(x, meantime_ldp_list, width, label='LDP')
+        rects3 = ax.bar(x + 2*width/3, meantime_wo_noise_wo_postgis_fun_list, width, label='Baseline')
 
-        ax.set_ylabel('Execution time')
-        ax.set_title('With noise and without noise (no PostGIS function)')
+        ax.set_ylabel('Latency')
+        ax.set_title('Performance comparison')
         ax.set_xticks(x, labels)
         ax.legend()
 
@@ -344,4 +345,4 @@ def compare_noise_with_request_wo_postgis_func(query_list, datapoint_attribute, 
         return noisy_responses, ldp_responses, responses
 
 if __name__ == '__main__':
-    con = connect()
+    con = cProfile.run("connect()")
