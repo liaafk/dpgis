@@ -1,6 +1,6 @@
 # dpgis
 
-This ist the code to run the DP-based proxy for PostGIS. We implement the LDP algorithm as stated in [1].
+This is the code to run the DP-based proxy for PostGIS. We implement the LDP algorithm as stated in [1].
 
 ## How to use
 
