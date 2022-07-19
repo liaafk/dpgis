@@ -78,12 +78,12 @@ def getLaplaceDistribution(minx, miny, maxx, maxy, eps):
 def noisy_sql_response(query, datapoint_attribute, conn, epsilon, laplace_points, laplace_result, local_dp):
     # get points relevant to query
     points = getQueryPoints(query, datapoint_attribute, conn)
+    # removing outliers
+    points = removeOutliers(points, datapoint_attribute)
     # getting extreme points
     minx, miny, maxx, maxy = getExtremePoints(points)
     # adding laplace distribution
     lap_x, lap_y = getLaplaceDistribution(minx, miny, maxx, maxy, epsilon)
-    # removing outliers
-    points = removeOutliers(points, datapoint_attribute)
 
     geo_df = gpd.GeoDataFrame(points, geometry=datapoint_attribute, crs="4326")
     if laplace_points:
