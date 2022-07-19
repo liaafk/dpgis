@@ -87,7 +87,7 @@ def comparison_options(query_list, datapoint_attribute, conn, epsilon, repetitio
             noisy_points_responses.append(response)
             time_noisy_points.sort()
             time_noisy_points = time_noisy_points[drop_lower:drop_upper]
-            avg_time_noisy_points = round(sum(time_noisy_points)/amount_after_drop, 4)
+            avg_time_noisy_points = round(sum(time_noisy_points)/len(time_noisy_points), 3)
             avg_time_noisy_points_list.append(avg_time_noisy_points)
         print("**********************************************************")
         print("avg noisy points: ", avg_time_noisy_points_list)
@@ -108,7 +108,7 @@ def comparison_options(query_list, datapoint_attribute, conn, epsilon, repetitio
             noisy_result_responses.append(response)
             time_noisy_result.sort()
             time_noisy_result = time_noisy_result[drop_lower:drop_upper]
-            avg_time_noisy_result = round(sum(time_noisy_result)/amount_after_drop, 4)
+            avg_time_noisy_result = round(sum(time_noisy_result)/len(time_noisy_result), 3)
             avg_time_noisy_result_list.append(avg_time_noisy_result)
         print("**********************************************************")
         print("avg noisy result: ", avg_time_noisy_result_list)
@@ -129,7 +129,7 @@ def comparison_options(query_list, datapoint_attribute, conn, epsilon, repetitio
             noisy_both_responses.append(response)
             time_noisy_both.sort()
             time_noisy_both = time_noisy_both[drop_lower:drop_upper]
-            avg_time_noisy_both = round(sum(time_noisy_both)/amount_after_drop, 4)
+            avg_time_noisy_both = round(sum(time_noisy_both)/len(time_noisy_both), 3)
             avg_time_noisy_both_list.append(avg_time_noisy_both)
         print("**********************************************************")
         print("avg noisy points and result: ", avg_time_noisy_result_list)
@@ -150,7 +150,7 @@ def comparison_options(query_list, datapoint_attribute, conn, epsilon, repetitio
             ldp_responses.append(response)
             time_ldp.sort()
             time_ldp = time_ldp[drop_lower:drop_upper]
-            avg_time_ldp = round(sum(time_ldp)/amount_after_drop, 4)
+            avg_time_ldp = round(sum(time_ldp)/len(time_ldp), 3)
             avg_time_ldp_list.append(avg_time_ldp)
         print("**********************************************************")
         print("avg_time_ldp_list: ", avg_time_ldp_list)
@@ -169,7 +169,7 @@ def comparison_options(query_list, datapoint_attribute, conn, epsilon, repetitio
                 time_baseline.append(t)
             time_baseline.sort()
             time_baseline = time_baseline[drop_lower:drop_upper]
-            avg_time_baseline = round(sum(time_baseline)/amount_after_drop, 4)
+            avg_time_baseline = round(sum(time_baseline)/len(time_baseline), 3)
             avg_time_baseline_list.append(avg_time_baseline)
             responses.append(response)
         print("**********************************************************")
@@ -181,23 +181,23 @@ def comparison_options(query_list, datapoint_attribute, conn, epsilon, repetitio
         x = np.arange(len(labels))
         width = 0.18
         plt.setp
-        fig, ax = plt.subplots(figsize=(15,8))
+        fig, ax = plt.subplots(figsize=(15,15))
         rects1 = ax.bar(x - 2*width, avg_time_noisy_points_list, width, label='Laplace noise: points')
         rects2 = ax.bar(x - width, avg_time_noisy_result_list, width, label='Laplace noise: result')
         rects3 = ax.bar(x, avg_time_noisy_both_list, width, label='Laplace noise: points and result')
         rects4 = ax.bar(x + width, avg_time_ldp_list, width, label='LDP')
         rects5 = ax.bar(x + 2*width, avg_time_baseline_list, width, label='Baseline')
-        plt.ylim(0, 0.5)
+        plt.ylim(0, 1.5)
         ax.set_ylabel('Latency')
         ax.set_title('Performance comparison')
         ax.set_xticks(x, labels)
         ax.legend()
 
-        ax.bar_label(rects1, padding=5, rotation=45)
-        ax.bar_label(rects2, padding=5, rotation=45)
-        ax.bar_label(rects3, padding=5, rotation=45)
-        ax.bar_label(rects4, padding=5, rotation=45)
-        ax.bar_label(rects5, padding=5, rotation=45)
+        ax.bar_label(rects1, padding=5, rotation=60)
+        ax.bar_label(rects2, padding=5, rotation=60)
+        ax.bar_label(rects3, padding=5, rotation=60)
+        ax.bar_label(rects4, padding=5, rotation=60)
+        ax.bar_label(rects5, padding=5, rotation=60)
         fig.autofmt_xdate()
         plt.show()
         return noisy_points_responses, noisy_result_responses, noisy_both_responses, ldp_responses, responses
