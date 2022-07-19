@@ -75,7 +75,7 @@ def getLaplaceDistribution(minx, miny, maxx, maxy, eps):
 
 # getting the noisy response of a SQL query containing a PostGIS function
 # possible PostGIS functions: ST_ENVELOPE, ST_EXTENT, ST_CENTROID, ST_UNION
-def noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, local_dp):
+def noisy_sql_response(query, datapoint_attribute, conn, epsilon, laplace_points, laplace_result, local_dp):
     # get points relevant to query
     points = getQueryPoints(query, datapoint_attribute, conn)
     # getting extreme points
@@ -86,17 +86,17 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, 
     points = removeOutliers(points, datapoint_attribute)
 
     geo_df = gpd.GeoDataFrame(points, geometry=datapoint_attribute, crs="4326")
-    if noisy_points:
+    if laplace_points:
         # adding noise to all points in the GeoDataFrame
         geo_df = getNoisyPoints(minx, miny, maxx, maxy, points, float(epsilon), datapoint_attribute)
-    else:
+    elif local_dp:
         geo_df = square_mechanism(geo_df, float(epsilon), datapoint_attribute)
     # finding PostGIS function in SELECT-part
     select_query =  getQueryParts(query)[0].lower()
     if "st_envelope" in select_query or "st_extent" in select_query:
         # returning the bounding box of the GeoDataFrame
         result = geo_df.dissolve().total_bounds
-        if noisy_points:
+        if laplace_result:
             # adding noise to the bounding box
             #print("Noising result")
             result = [lap_x.randomise(result[0]), lap_y.randomise(result[1]), lap_x.randomise(result[2]), lap_y.randomise(result[3])]
@@ -104,7 +104,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, 
     elif "st_centroid" in select_query:
         # returning the center of the GeoDataFrame
         result = geo_df.to_crs(epsg=4326).dissolve().centroid[0]
-        if noisy_points:
+        if laplace_result:
             # adding noise to the center point
             #print("Noising result")
             result = [lap_x.randomise(result.x), lap_y.randomise(result.y)]
@@ -112,7 +112,7 @@ def noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, 
     elif "st_union" in select_query:
         # returning the points of  the GeoDataFrame without overlap
         result = [[p.x, p.y] for p in list(geo_df.geometry)]
-        if noisy_points:
+        if laplace_result:
             # adding noise to each point in the GeoDataFrame
             #print("Noising result")
             result = getNoisyPoints(minx, miny, maxx, maxy, geo_df, float(epsilon), datapoint_attribute)

@@ -43,9 +43,9 @@ def connect():
         # setting test parameters
         epsilon = 15
         datapoint_attribute = 'loc'
-        noisy_points = True
+        #noisy_points = True
         #noisy_result = True
-        local_dp = True
+        #local_dp = True
         repetitions = 100
         # reading the query lists
         with open('query_list.txt', newline='') as f:
@@ -63,7 +63,7 @@ def connect():
         #response_points, response_result, response_both_options = compare_noise_options(query_list, datapoint_attribute, conn, epsilon)
         #print("Comparison of options result: ", response_points, response_result, response_both_options)
 
-        response_noisy_2,  ldp_responses_2, response_wo_postgis_func = compare_noise_with_request_wo_postgis_func(query_list, datapoint_attribute, conn, epsilon, noisy_points, local_dp, repetitions)
+        noisy_points_responses, noisy_result_responses, noisy_both_responses, ldp_responses, responses = comparison_options(query_list, datapoint_attribute, conn, epsilon, repetitions)
         #print("Comparison of noisy response and no PostGIS request result: ", response_noisy_2, response_wo_postgis_func)
 
 	# close the communication with the PostgreSQL
@@ -171,7 +171,7 @@ def compare_noise_options(query_list, datapoint_attribute, conn, epsilon, repeti
         meantime_noisy_points_list = []
         meantime_noisy_result_list = []
         #execute all queries of query_list with noise
-        noisy_responses_extreme = []
+        noisy_responses_both = []
         noisy_responses_points = []
         noisy_responses_result = []
         for query in query_list[:2]:
@@ -182,7 +182,7 @@ def compare_noise_options(query_list, datapoint_attribute, conn, epsilon, repeti
                 # only noising points 
                 time_points = 0
                 start = time.time()
-                response_points = noisy_sql_response(query, datapoint_attribute, conn, epsilon, True, False)
+                response_points = noisy_sql_response(query, datapoint_attribute, conn, epsilon, True, False, False)
                 end = time.time()
                 t = end - start
                 time_points += t
@@ -190,7 +190,7 @@ def compare_noise_options(query_list, datapoint_attribute, conn, epsilon, repeti
                 # only noising points 
                 time_result = 0
                 start = time.time()
-                response_result = noisy_sql_response(query, datapoint_attribute, conn, epsilon, False, True)
+                response_result = noisy_sql_response(query, datapoint_attribute, conn, epsilon, False, True, False)
                 end = time.time()
                 t = end - start
                 time_result += t
@@ -198,7 +198,7 @@ def compare_noise_options(query_list, datapoint_attribute, conn, epsilon, repeti
                 # noising points and result
                 time_both_options = 0
                 start = time.time()
-                response_both_options = noisy_sql_response(query, datapoint_attribute, conn, epsilon, True, True)
+                response_both_options = noisy_sql_response(query, datapoint_attribute, conn, epsilon, True, True, False)
                 end = time.time()
                 t = end - start
                 time_both_options += t
@@ -211,7 +211,7 @@ def compare_noise_options(query_list, datapoint_attribute, conn, epsilon, repeti
             meantime_noisy_result = time_result/repetitions
             meantime_noisy_result_list.append(meantime_noisy_result)
 
-            noisy_responses_extreme.append(response_both_options)
+            noisy_responses_both.append(response_both_options)
             meantime_both_options = time_both_options/repetitions
             meantime_both_options_list.append(meantime_both_options)
 
@@ -249,34 +249,69 @@ def compare_noise_options(query_list, datapoint_attribute, conn, epsilon, repeti
         plt.show()
         return response_points, response_result, response_both_options
 
-def compare_noise_with_request_wo_postgis_func(query_list, datapoint_attribute, conn, epsilon, noisy_points, local_dp, repetitions):
-        meantime_noisy_list = []
-        meantime_ldp_list = []
-        meantime_wo_noise_wo_postgis_fun_list = []
+def comparison_options(query_list, datapoint_attribute, conn, epsilon, repetitions):
+        avg_time_noisy_points_list = []
+        avg_time_noisy_result_list = []
+        avg_time_noisy_both_list = []
+        avg_time_ldp_list = []
+        avg_time_baseline_list = []
         # executing all queries of query_list with noise
-        local_dp = False
-        noisy_points = True
-        noisy_responses = []
-        print("*****************RESPONSES WITH NOISE*****************")
+        noisy_points_responses = []
+        print("*****************NOISY POINTS*****************")
         for query in query_list:
             print(query)
             # executing each query repetitions times and calculate the mean
             for l in range(1, repetitions+1):
-                time_noisy = 0
+                time_noisy_points = 0
                 start = time.time()
-                response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, local_dp) 
+                response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, True, False, False) 
                 end = time.time()
                 t = end - start
-                time_noisy += t
-            noisy_responses.append(response)
-            meantime_noisy = time_noisy/repetitions
-            meantime_noisy_list.append(meantime_noisy)
+                time_noisy_points += t
+            noisy_points_responses.append(response)
+            avg_time_noisy_points = time_noisy_points/repetitions
+            avg_time_noisy_points_list.append(avg_time_noisy_points)
         print("**********************************************************")
-        print("meantime_noisy_list: ", meantime_noisy_list)
+        print("avg noisy points: ", avg_time_noisy_points_list)
         print("**********************************************************")
 
-        local_dp = True
-        noisy_points = False
+        noisy_result_responses = []
+        print("*****************NOISY RESULT*****************")
+        for query in query_list:
+            print(query)
+            # executing each query repetitions times and calculate the mean
+            for l in range(1, repetitions+1):
+                time_noisy_result = 0
+                start = time.time()
+                response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, False, True, False) 
+                end = time.time()
+                t = end - start
+                time_noisy_result += t
+            noisy_result_responses.append(response)
+            avg_time_noisy_result = time_noisy_result/repetitions
+            avg_time_noisy_result_list.append(avg_time_noisy_result)
+        print("**********************************************************")
+        print("avg noisy result: ", avg_time_noisy_result_list)
+        print("**********************************************************")
+
+        noisy_both_responses = []
+        print("*****************NOISY POINTS AND RESULT*****************")
+        for query in query_list:
+            print(query)
+            # executing each query repetitions times and calculate the mean
+            for l in range(1, repetitions+1):
+                time_noisy_both = 0
+                start = time.time()
+                response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, True, True, False) 
+                end = time.time()
+                t = end - start
+                time_noisy_both += t
+            noisy_both_responses.append(response)
+            avg_time_noisy_both = time_noisy_both/repetitions
+            avg_time_noisy_both_list.append(avg_time_noisy_both)
+        print("**********************************************************")
+        print("avg noisy points and result: ", avg_time_noisy_result_list)
+        print("**********************************************************")
         ldp_responses = []
 
         print("*****************RESPONSES WITH LDP*****************")
@@ -286,38 +321,38 @@ def compare_noise_with_request_wo_postgis_func(query_list, datapoint_attribute, 
             for l in range(1, repetitions+1):
                 time_ldp = 0
                 start = time.time()
-                response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, noisy_points, local_dp)
+                response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, False, False, True)
                 end = time.time()
                 t = end - start
                 time_ldp += t
             ldp_responses.append(response)
-            meantime_ldp = time_ldp/repetitions
-            meantime_ldp_list.append(meantime_ldp)
+            avg_time_ldp = time_ldp/repetitions
+            avg_time_ldp_list.append(avg_time_ldp)
         print("**********************************************************")
-        print("meantime_ldp_list: ", meantime_ldp_list)
+        print("avg_time_ldp_list: ", avg_time_ldp_list)
         print("**********************************************************")
         
-        with open('query_list_wo_postgis_func.txt', newline='') as f:
-            query_list_wo_postgis_func = f.readlines()
+        #with open('query_list_wo_postgis_func.txt', newline='') as f:
+        #    query_list_wo_postgis_func = f.readlines()
 
         # executing all queries of query_list_wo_postgis_func without noise
         responses = []
-        print("*****************RESPONSES WITHOUT NOISE*****************")
-        for query in query_list_wo_postgis_func:
+        print("*****************RESPONSES BASELINE*****************")
+        for query in query_list:
             for l in range (1, repetitions+1):
-                time_wo_noise = 0
+                time_baseline = 0
                 start = time.time()
-                to_read = query.split()[1].lower()
-                type_select = to_read.split('(')[0]
-                response = gpd.read_postgis(query, conn, geom_col=type_select)
+                #to_read = query.split()[1].lower()
+                #type_select = to_read.split('(')[0]
+                response = noisy_sql_response(query, datapoint_attribute, conn, epsilon, False, False, False) #gpd.read_postgis(query, conn, geom_col=type_select)
                 end = time.time()
                 t = end - start
-                time_wo_noise += t
-            meantime_wo_noise = time_wo_noise/repetitions
-            meantime_wo_noise_wo_postgis_fun_list.append(meantime_wo_noise)
+                time_baseline += t
+            avg_time_baseline = time_baseline/repetitions
+            avg_time_baseline_list.append(avg_time_baseline)
             responses.append(response)
         print("**********************************************************")
-        print("meantime_wo_noise_wo_postgis_fun_list: ", meantime_wo_noise_wo_postgis_fun_list)
+        print("avg time baseline list: ", avg_time_baseline_list)
         print("**********************************************************")
 
         # putting results into a diagram
@@ -326,9 +361,11 @@ def compare_noise_with_request_wo_postgis_func(query_list, datapoint_attribute, 
         width = 0.35
         plt.setp
         fig, ax = plt.subplots(figsize=(10,8))
-        rects1 = ax.bar(x - 2*width/3, meantime_noisy_list, width, label='Laplace mechanism')
-        rects2 = ax.bar(x, meantime_ldp_list, width, label='LDP')
-        rects3 = ax.bar(x + 2*width/3, meantime_wo_noise_wo_postgis_fun_list, width, label='Baseline')
+        rects1 = ax.bar(x - 4*width/5, avg_time_noisy_points_list, width, label='Laplace noise: points')
+        rects2 = ax.bar(x - 2*width/5, avg_time_noisy_points_list, width, label='Laplace noise: result')
+        rects3 = ax.bar(x, avg_time_noisy_points_list, width, label='Laplace noise: points and result')
+        rects4 = ax.bar(x + 2*width/5, avg_time_ldp_list, width, label='LDP')
+        rects5 = ax.bar(x + 4*width/5, avg_time_baseline_list, width, label='Baseline')
 
         ax.set_ylabel('Latency')
         ax.set_title('Performance comparison')
@@ -338,9 +375,11 @@ def compare_noise_with_request_wo_postgis_func(query_list, datapoint_attribute, 
         ax.bar_label(rects1, padding=3)
         ax.bar_label(rects2, padding=3)
         ax.bar_label(rects3, padding=3)
+        ax.bar_label(rects4, padding=3)
+        ax.bar_label(rects5, padding=3)
         fig.autofmt_xdate()
         plt.show()
-        return noisy_responses, ldp_responses, responses
+        return noisy_points_responses, noisy_result_responses, noisy_both_responses, ldp_responses, responses
 
 if __name__ == '__main__':
-    con = cProfile.run("connect()")
+    con = connect()

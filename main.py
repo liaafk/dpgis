@@ -39,16 +39,18 @@ def connect():
 
     # Get SQL Query and name of the attribute datapoint in table out of the config file
         query = list(config_file.QUERY)
-        datapoint_attribute = [config_file.DATAPOINT_ATTRIBUTE]
+        datapoint_attribute = config_file.DATAPOINT_ATTRIBUTE
         epsilon = list(config_file.EPSILON)
-        noisy_points = list(config_file.NOISY_POINTS)
-        #noisy_result = list(config_file.NOISY_RESULT)
-        local_dp = list(config_file.LOCAL_DP)
-    
+        laplace_points = config_file.LAPLACE_POINTS
+        laplace_result = config_file.LAPLACE_RESULT
+        local_dp = config_file.LOCAL_DP
+
+        if (laplace_points or laplace_result) and local_dp:
+            print("choose Laplace or local DP!")
+            return -1
     # Executing query using the noisy SQL query
-        for (iter_query, iter_datapoint_attribute, iter_epsilon, iter_noisy_points, iter_local_dp) in product(query, datapoint_attribute, epsilon, noisy_points, local_dp):
-            print(iter_query, iter_datapoint_attribute, iter_epsilon, iter_noisy_points, iter_local_dp)
-            print(noisy_sql_response(iter_query, iter_datapoint_attribute, conn, iter_epsilon, iter_noisy_points, iter_local_dp))
+        for (iter_query, iter_epsilon) in product(query, epsilon):
+            print(noisy_sql_response(iter_query, datapoint_attribute, conn, iter_epsilon, laplace_points, laplace_result, local_dp))
 
 	# close the communication with the PostgreSQL
         cur.close()
