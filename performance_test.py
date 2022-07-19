@@ -162,7 +162,6 @@ def compare_noise_without(query_list, query_list_postgis, datapoint_attribute, c
         ax.bar_label(rects2, padding=3)
         ax.bar_label(rects3, padding=3)
         fig.autofmt_xdate()
-        #fig.tight_layout()
         plt.show()
         return noisy_responses, ldp_responses, responses
 
@@ -340,7 +339,6 @@ def compare_noise_with_request_wo_postgis_func(query_list, datapoint_attribute, 
         ax.bar_label(rects2, padding=3)
         ax.bar_label(rects3, padding=3)
         fig.autofmt_xdate()
-        #fig.tight_layout()
         plt.show()
         return noisy_responses, ldp_responses, responses
 
