@@ -49,6 +49,12 @@ python main.py
 
 To see examples of queries currently supported by the proxy, see `query_list.txt`.
 
+## Architecture
+
+The architecture of this library is visualized in the figure below.
+
+![Architecture](architecture.png)
+
 ## Performance test
 
 This library also incluces a perfomance test which calculates the average latency of different requests out of the `query_list.txt`. Each request is sent 1000 times. To calcualte the average of the latency, the highest and the lowest 10% are not considered. The execution is as follows:
