@@ -4,10 +4,10 @@ This library provides a proxy based on Differential Privacy (DP) for PostGIS req
 
 The first option uses the Local Differential Privacy (LDP) algorithm as stated in [1]. Using LDP, DP is applied locally to the data of the end user and then sent to the server. In this library, the geodata is not aggregated at the clients side, instead LDP is applied to all points affected by a query. LDP ensures that the result is differentially private.
 
-The second option uses the Lalpace noise mechanism. The Laplace noise function offers the option to either add noise to the raw points or to the result (e.g. Bounding Box) or to both. In this case, until now there is no evidence, that this is truly differentially private.
+The second option uses the Laplace noise mechanism. The Laplace noise function offers the option to either add noise to the raw points or to the result (e.g. Bounding Box) or to both. For these methods we cannot guarantee that this is truly differentially private.
 
 
-## How to use
+## Usage
 
 It is required to create a conda environment and install all necessary packages by running the following commands:
 
