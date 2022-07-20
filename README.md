@@ -2,9 +2,9 @@
 
 This library provides a proxy based on Differential Privacy (DP) for PostGIS requests. The proxy provides two options for making a reqest more private. 
 
-The first option uses the Local Differential Privacy (LDP) algorithm as stated in [1]. Using LDP, DP is applied locally to the data of the end user and then sent to the server. In this library, it is not aggregated at the clients side, instead LDP is applied to all points affected by a query. LDP ensures that the result is differentialy private.
+The first option uses the Local Differential Privacy (LDP) algorithm as stated in [1]. Using LDP, DP is applied locally to the data of the end user and then sent to the server. In this library, the geodata is not aggregated at the clients side, instead LDP is applied to all points affected by a query. LDP ensures that the result is differentially private.
 
-The second option uses Lalpace noise mechanism. The Laplace noise function offers the option to either add noise to the raw points or to the result (e.g. result of Bounding Box) or to both. In this case, there is no evidence until now, that this is truly differentially private.
+The second option uses the Lalpace noise mechanism. The Laplace noise function offers the option to either add noise to the raw points or to the result (e.g. Bounding Box) or to both. In this case, until now there is no evidence, that this is truly differentially private.
 
 
 ## How to use
@@ -63,7 +63,7 @@ This library also incluces a perfomance test which calculates the average latenc
 python performance_test.py
 ```
 
-The performance test results in a diagram showing the different requests on the horizontal axis and the average latency on the vertical axis. The bars represent the latencies. Here is an example:
+The performance test results in the diagram show the different requests on the horizontal axis and the average latency on the vertical axis. The bars represent the latencies. Here is an example:
 
 ![Performance test example](performance_test_example.png)
 
