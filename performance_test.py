@@ -62,6 +62,7 @@ def connect():
             print('Database connection closed.')
     return
 
+# comparing the latency of different possible options using the average
 def comparison_options(query_list, datapoint_attribute, conn, epsilon, repetitions, drop_percentile):
         avg_time_noisy_points_list = []
         avg_time_noisy_result_list = []
