@@ -4,7 +4,7 @@ import random
 from scipy.optimize import minimize
 import geopandas as gpd
 
-#normalize points
+# normalize points
 def normalize_points(xory_list):
     lower = min(xory_list)
     upper = max(xory_list)
@@ -13,7 +13,7 @@ def normalize_points(xory_list):
     upper_norm = upper-middle
     return normalized, middle, upper_norm
 
-#compute center of square region by Equation 5
+# compute center of square region by Equation 5
 def compute_center(xory, side_length, upper_norm):
     lower_norm = upper_norm * -1
     if xory <= lower_norm + side_length/2:
@@ -26,7 +26,7 @@ def compute_center(xory, side_length, upper_norm):
 def normalizing_term(side_length, eps, upper_norm_x, upper_norm_y):
     return 1/((side_length**2) * (math.exp(eps)-1) + 4*upper_norm_x*upper_norm_y)
 
-#get optimal side length of square region by Equation 9
+# get optimal side length of square region by Equation 9
 def get_opt_side_length(eps, upper_norm_x, upper_norm_y):
     max_bound = min(upper_norm_x, upper_norm_y)
     fun = lambda w: ((1/((w**2)*(math.exp(eps)-1) + 4*upper_norm_x*upper_norm_y))*4*upper_norm_x*upper_norm_y*(upper_norm_x**2 + upper_norm_y**2))/3 + ((1/((w**2)*(math.exp(eps)-1)+4*upper_norm_x*upper_norm_y))*(w**4)*(math.exp(eps)-1))/12+((1/((w**2)*(math.exp(eps)-1)+4*upper_norm_x*upper_norm_y))*(w**5)*(math.exp(eps) - 1)*(upper_norm_x+upper_norm_y))/(48*upper_norm_x*upper_norm_y)
