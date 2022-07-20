@@ -23,6 +23,7 @@ def compute_center(xory, side_length, upper_norm):
     else:
         return upper_norm - side_length/2
 
+# compute alpha* for square mechanism
 def normalizing_term(side_length, eps, upper_norm_x, upper_norm_y):
     return 1/((side_length**2) * (math.exp(eps)-1) + 4*upper_norm_x*upper_norm_y)
 
@@ -34,6 +35,7 @@ def get_opt_side_length(eps, upper_norm_x, upper_norm_y):
     {'type':'ineq', 'fun': lambda w: w < 2*max_bound})
     return minimize(fun, 3, method='COBYLA', constraints=cons).x[0]
 
+# square mechanism by Algorithm 1
 def square_mechanism(domain, eps, datapoint_attribute):
     x = [p.x for p in list(domain.geometry)]
     y = [p.y for p in list(domain.geometry)]
